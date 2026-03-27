@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { generateStateDiagram, StateMachine, transition } from "../src/index";
+import {
+  FiniteStateMachineError,
+  generateStateDiagram,
+  InvalidSourceStateError,
+  StateMachine,
+  transition,
+} from "../src/index";
 
 type TurnstileState = "closed" | "open";
 
@@ -43,6 +49,8 @@ describe("turnstile transitions", () => {
   it("throws for passThrough from closed and keeps state unchanged", () => {
     const machine = new Turnstile("closed");
 
+    expect(() => machine.passThrough()).toThrow(FiniteStateMachineError);
+    expect(() => machine.passThrough()).toThrow(InvalidSourceStateError);
     expect(() => machine.passThrough()).toThrow(
       'Cannot transition using passThrough from state "closed".',
     );

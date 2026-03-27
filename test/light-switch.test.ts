@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  FiniteStateMachineError,
   generateStateDiagram,
+  InvalidSourceStateError,
   StateMachine,
+  TransitionConditionFailedError,
   transition,
   type Condition,
 } from "../src/index";
@@ -43,6 +46,8 @@ describe("transition", () => {
   it("throws when transitioning off -> off and keeps state unchanged", () => {
     const machine = new LightSwitch("off");
 
+    expect(() => machine.switchOff()).toThrow(FiniteStateMachineError);
+    expect(() => machine.switchOff()).toThrow(InvalidSourceStateError);
     expect(() => machine.switchOff()).toThrow(
       'Cannot transition using switchOff from state "off".',
     );
@@ -52,13 +57,15 @@ describe("transition", () => {
   it("raises an error for off -> off", () => {
     const machine = new LightSwitch("off");
 
-    expect(() => machine.switchOff()).toThrow();
+    expect(() => machine.switchOff()).toThrow(FiniteStateMachineError);
   });
 
   it("throws when a condition fails and leaves state unchanged", () => {
     const machine = new LightSwitch("off");
     machine.hasPower = false;
 
+    expect(() => machine.switchOn()).toThrow(FiniteStateMachineError);
+    expect(() => machine.switchOn()).toThrow(TransitionConditionFailedError);
     expect(() => machine.switchOn()).toThrow(
       "Conditions not met for transition switchOn.",
     );
@@ -71,6 +78,8 @@ describe("transition", () => {
     machine.switchOn();
     expect(machine.state).toBe("on");
 
+    expect(() => machine.switchOn()).toThrow(FiniteStateMachineError);
+    expect(() => machine.switchOn()).toThrow(InvalidSourceStateError);
     expect(() => machine.switchOn()).toThrow(
       'Cannot transition using switchOn from state "on".',
     );

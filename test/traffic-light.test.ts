@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { generateStateDiagram, StateMachine, transition } from "../src/index";
+import {
+  FiniteStateMachineError,
+  generateStateDiagram,
+  InvalidSourceStateError,
+  StateMachine,
+  transition,
+} from "../src/index";
 
 type TrafficLightState = "red" | "green" | "yellow";
 
@@ -44,6 +50,8 @@ describe("traffic light transitions", () => {
   it("throws for red -> red and keeps state unchanged", () => {
     const machine = new TrafficLight("red");
 
+    expect(() => machine.goRed()).toThrow(FiniteStateMachineError);
+    expect(() => machine.goRed()).toThrow(InvalidSourceStateError);
     expect(() => machine.goRed()).toThrow(
       'Cannot transition using goRed from state "red".',
     );
@@ -54,6 +62,8 @@ describe("traffic light transitions", () => {
     const machine = new TrafficLight("red");
     machine.goGreen();
 
+    expect(() => machine.goGreen()).toThrow(FiniteStateMachineError);
+    expect(() => machine.goGreen()).toThrow(InvalidSourceStateError);
     expect(() => machine.goGreen()).toThrow(
       'Cannot transition using goGreen from state "green".',
     );

@@ -1,3 +1,8 @@
+import {
+  InvalidSourceStateError,
+  TransitionConditionFailedError,
+  TransitionExecutionError,
+} from "./errors.js";
 import { StateMachine } from "./state-machine.js";
 
 export type Condition<TMachine> = (machine: TMachine) => boolean;
@@ -64,20 +69,20 @@ export function transition<
       this: TMachine,
       ...args: TArgs
     ): TResult {
+      const methodName = String(propertyKey);
+
       if (!sources.includes(this.state)) {
-        throw new Error(
-          `Cannot transition using ${String(propertyKey)} from state "${this.state}".`,
-        );
+        throw new InvalidSourceStateError(methodName, this.state, sources);
       }
 
       const conditions = config.conditions ?? [];
       const passedConditions = conditions.every((condition) => condition(this));
 
       if (!passedConditions) {
-        throw new Error(
-          `Conditions not met for transition ${String(propertyKey)}.`,
-        );
+        throw new TransitionConditionFailedError(methodName);
       }
+
+      const sourceState = this.state;
 
       try {
         const result = originalMethod.apply(this, args);
@@ -93,7 +98,12 @@ export function transition<
                 this.state = errorState;
               }
 
-              throw error;
+              throw new TransitionExecutionError(
+                methodName,
+                sourceState,
+                config.target,
+                { cause: error },
+              );
             },
           ) as TResult;
         }
@@ -105,7 +115,12 @@ export function transition<
           this.state = errorState;
         }
 
-        throw error;
+        throw new TransitionExecutionError(
+          methodName,
+          sourceState,
+          config.target,
+          { cause: error },
+        );
       }
     };
 

@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { generateStateDiagram, StateMachine, transition } from "../src/index";
+import {
+  FiniteStateMachineError,
+  TransitionExecutionError,
+  generateStateDiagram,
+  StateMachine,
+  transition,
+} from "../src/index";
 
 type BackgroundJobState = "queued" | "running" | "completed" | "failed";
 
@@ -34,6 +40,20 @@ class BackgroundJob extends StateMachine<BackgroundJobState> {
   retry() {}
 }
 
+class Deployment extends StateMachine<"pending" | "running" | "completed"> {
+  constructor(initialState: "pending" | "running" | "completed" = "pending") {
+    super(initialState);
+  }
+
+  @transition<"pending" | "running" | "completed", Deployment>({
+    source: "pending",
+    target: "running",
+  })
+  start() {
+    throw new Error("boot failed");
+  }
+}
+
 describe("background job transitions", () => {
   it("moves queued -> running -> completed on success", () => {
     const job = new BackgroundJob("queued");
@@ -51,8 +71,52 @@ describe("background job transitions", () => {
     job.start();
     job.shouldFail = true;
 
-    expect(() => job.process()).toThrow("job failed");
+    expect(() => job.process()).toThrow(FiniteStateMachineError);
     expect(job.state).toBe("failed");
+  });
+
+  it("wraps execution failures in TransitionExecutionError", () => {
+    const job = new BackgroundJob("queued");
+    job.start();
+    job.shouldFail = true;
+
+    expect(() => job.process()).toThrow(TransitionExecutionError);
+    expect(() => {
+      const failingJob = new BackgroundJob("queued");
+      failingJob.start();
+      failingJob.shouldFail = true;
+      failingJob.process();
+    }).toThrow(
+      'Transition process failed while moving from "running" to "completed".',
+    );
+  });
+
+  it("preserves the original thrown error as the cause", () => {
+    const job = new BackgroundJob("queued");
+    job.start();
+    job.shouldFail = true;
+
+    try {
+      job.process();
+      throw new Error("expected process to throw");
+    } catch (error) {
+      expect(error).toBeInstanceOf(TransitionExecutionError);
+      expect((error as TransitionExecutionError<BackgroundJobState>).cause).toBeInstanceOf(Error);
+      expect(
+        ((error as TransitionExecutionError<BackgroundJobState>).cause as Error)
+          .message,
+      ).toBe("job failed");
+    }
+  });
+
+  it("keeps the current state when execution fails without on_error", () => {
+    const deployment = new Deployment("pending");
+
+    expect(() => deployment.start()).toThrow(TransitionExecutionError);
+    expect(() => deployment.start()).toThrow(
+      'Transition start failed while moving from "pending" to "running".',
+    );
+    expect(deployment.state).toBe("pending");
   });
 
   it("allows retrying a failed job", () => {
