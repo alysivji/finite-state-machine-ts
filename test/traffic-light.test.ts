@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { StateMachine, transition } from "../src/index";
+import { generateStateDiagram, StateMachine, transition } from "../src/index";
 
 type TrafficLightState = "red" | "green" | "yellow";
 
@@ -58,5 +58,19 @@ describe("traffic light transitions", () => {
       'Cannot transition using goGreen from state "green".',
     );
     expect(machine.state).toBe("green");
+  });
+
+  it("generates a Mermaid state diagram from transition metadata", () => {
+    expect(generateStateDiagram(TrafficLight, { initialState: "red" })).toBe(
+      `stateDiagram-v2
+  state "red" as state_0
+  state "green" as state_1
+  state "yellow" as state_2
+  [*] --> state_0
+  state_0 --> state_1: goGreen
+  state_1 --> state_2: goYellow
+  state_2 --> state_0: goRed
+`,
+    );
   });
 });

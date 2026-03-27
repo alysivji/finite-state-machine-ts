@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { StateMachine, transition, type Condition } from "../src/index";
+import {
+  generateStateDiagram,
+  StateMachine,
+  transition,
+  type Condition,
+} from "../src/index";
 
 type PullRequestState = "draft" | "open" | "approved" | "merged" | "closed";
 
@@ -37,6 +42,12 @@ class GithubPullRequest extends StateMachine<PullRequestState> {
     conditions: [hasAtLeastOneApproval],
   })
   merge() {}
+
+  @transition<PullRequestState, GithubPullRequest, [], void>({
+    source: ["draft", "open", "approved"],
+    target: "closed",
+  })
+  close() {}
 }
 
 describe("github pull request transitions", () => {
@@ -71,5 +82,41 @@ describe("github pull request transitions", () => {
 
     expect(() => pr.merge()).toThrow("Conditions not met for transition merge.");
     expect(pr.state).toBe("approved");
+  });
+
+  it("allows closing from draft, open, and approved", () => {
+    const draftPr = new GithubPullRequest("draft");
+    draftPr.close();
+    expect(draftPr.state).toBe("closed");
+
+    const openPr = new GithubPullRequest("open");
+    openPr.close();
+    expect(openPr.state).toBe("closed");
+
+    const approvedPr = new GithubPullRequest("approved");
+    approvedPr.close();
+    expect(approvedPr.state).toBe("closed");
+  });
+
+  it("generates a Mermaid state diagram from transition metadata", () => {
+    expect(
+      generateStateDiagram(GithubPullRequest, { initialState: "draft" }),
+    ).toBe(
+      `stateDiagram-v2
+  state "draft" as state_0
+  state "open" as state_1
+  state "approved" as state_2
+  state "merged" as state_3
+  state "closed" as state_4
+  [*] --> state_0
+  state_0 --> state_1: readyForReview
+  state_1 --> state_0: convertToDraft
+  state_1 --> state_2: approve
+  state_2 --> state_3: merge
+  state_0 --> state_4: close
+  state_1 --> state_4: close
+  state_2 --> state_4: close
+`,
+    );
   });
 });

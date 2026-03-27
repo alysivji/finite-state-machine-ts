@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { StateMachine, transition, type Condition } from "../src/index";
+import {
+  generateStateDiagram,
+  StateMachine,
+  transition,
+  type Condition,
+} from "../src/index";
 
 type LightState = "off" | "on";
 
@@ -70,5 +75,17 @@ describe("transition", () => {
       'Cannot transition using switchOn from state "on".',
     );
     expect(machine.state).toBe("on");
+  });
+
+  it("generates a Mermaid state diagram from transition metadata", () => {
+    expect(generateStateDiagram(LightSwitch, { initialState: "off" })).toBe(
+      `stateDiagram-v2
+  state "off" as state_0
+  state "on" as state_1
+  [*] --> state_0
+  state_0 --> state_1: switchOn
+  state_1 --> state_0: switchOff
+`,
+    );
   });
 });
