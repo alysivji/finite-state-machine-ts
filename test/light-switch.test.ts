@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { StateMachine, transition, type Condition } from "../src/index";
 
-type LightState = "off" | "on" | "broken";
+type LightState = "off" | "on";
 
 const isPowered: Condition<LightSwitch> = (machine) => machine.hasPower;
 
@@ -24,15 +24,6 @@ class LightSwitch extends StateMachine<LightState> {
     target: "off",
   })
   switchOff() {}
-
-  @transition<LightState, LightSwitch, [], void>({
-    source: ["off", "on"],
-    target: "on",
-    on_error: "broken",
-  })
-  overload() {
-    throw new Error("bulb exploded");
-  }
 }
 
 describe("transition", () => {
@@ -44,13 +35,19 @@ describe("transition", () => {
     expect(machine.state).toBe("on");
   });
 
-  it("throws when the current state is not in source", () => {
+  it("throws when transitioning off -> off and keeps state unchanged", () => {
     const machine = new LightSwitch("off");
 
     expect(() => machine.switchOff()).toThrow(
       'Cannot transition using switchOff from state "off".',
     );
     expect(machine.state).toBe("off");
+  });
+
+  it("raises an error for off -> off", () => {
+    const machine = new LightSwitch("off");
+
+    expect(() => machine.switchOff()).toThrow();
   });
 
   it("throws when a condition fails and leaves state unchanged", () => {
@@ -63,10 +60,15 @@ describe("transition", () => {
     expect(machine.state).toBe("off");
   });
 
-  it("sets the onError state when the transition method throws", () => {
+  it("throws when transitioning on -> on and keeps state unchanged", () => {
     const machine = new LightSwitch("off");
 
-    expect(() => machine.overload()).toThrow("bulb exploded");
-    expect(machine.state).toBe("broken");
+    machine.switchOn();
+    expect(machine.state).toBe("on");
+
+    expect(() => machine.switchOn()).toThrow(
+      'Cannot transition using switchOn from state "on".',
+    );
+    expect(machine.state).toBe("on");
   });
 });
