@@ -1,4 +1,4 @@
-import { StateMachine } from "./state-machine.js";
+import type { StateMachine } from "./state-machine.js";
 import {
   getTransitionDefinitions,
   type TransitionDefinition,
@@ -14,7 +14,9 @@ export function generateStateDiagram<S extends string>(
 ): string {
   const definitions = getTransitionDefinitions(machineClass);
   const states = collectStates(definitions, options.initialState);
-  const aliases = new Map(states.map((state, index) => [state, `state_${index}`]));
+  const aliases = new Map(
+    states.map((state, index) => [state, `state_${index}`]),
+  );
   const lines = ["stateDiagram-v2"];
 
   for (const state of states) {

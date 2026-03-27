@@ -11,13 +11,17 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc",
+    "check": "biome check .",
+    "format": "biome format --write .",
+    "lint": "biome lint .",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.9",
     "@types/node": "^24.6.1",
-    "typescript": "^6.0.2",
     "@vitest/coverage-v8": "^4.1.2",
+    "typescript": "^6.0.2",
     "vitest": "^4.1.2"
   }
 }

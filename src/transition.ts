@@ -3,7 +3,7 @@ import {
   TransitionConditionFailedError,
   TransitionExecutionError,
 } from "./errors.js";
-import { StateMachine } from "./state-machine.js";
+import type { StateMachine } from "./state-machine.js";
 
 export type Condition<TMachine> = (machine: TMachine) => boolean;
 
@@ -44,13 +44,13 @@ export function transition<
     : [config.source];
   const errorState = config.onError;
 
-  return function (
+  return (
     target: object,
     propertyKey: string | symbol,
     descriptor: TypedPropertyDescriptor<
       TransitionMethod<TMachine, TArgs, TResult>
     >,
-  ): TypedPropertyDescriptor<TransitionMethod<TMachine, TArgs, TResult>> {
+  ): TypedPropertyDescriptor<TransitionMethod<TMachine, TArgs, TResult>> => {
     const originalMethod = descriptor.value;
 
     if (originalMethod === undefined) {
@@ -134,10 +134,7 @@ export function getTransitionDefinitions<S extends string>(
   let prototype = machineClass.prototype;
 
   while (prototype !== null && prototype !== Object.prototype) {
-    const ownDefinitions = Object.prototype.hasOwnProperty.call(
-      prototype,
-      TRANSITION_DEFINITIONS,
-    )
+    const ownDefinitions = Object.hasOwn(prototype, TRANSITION_DEFINITIONS)
       ? ((prototype[TRANSITION_DEFINITIONS] as TransitionDefinition<S>[]) ?? [])
       : [];
 
@@ -162,7 +159,7 @@ function defineTransition<S extends string>(
   definition: TransitionDefinition<S>,
 ): void {
   const metadataTarget = target as Record<symbol, TransitionDefinition<S>[]>;
-  const existingDefinitions = Object.prototype.hasOwnProperty.call(
+  const existingDefinitions = Object.hasOwn(
     metadataTarget,
     TRANSITION_DEFINITIONS,
   )

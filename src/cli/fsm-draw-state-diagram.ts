@@ -3,7 +3,7 @@
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { generateStateDiagram } from "../diagram.js";
-import { StateMachine } from "../state-machine.js";
+import type { StateMachine } from "../state-machine.js";
 
 interface CliOptions {
   classPath: string;
@@ -84,7 +84,9 @@ async function loadStateMachineClass(
     );
   }
 
-  return exportedValue as new (...args: never[]) => StateMachine<string>;
+  return exportedValue as new (
+    ...args: never[]
+  ) => StateMachine<string>;
 }
 
 function resolveModuleSpecifier(modulePath: string): string {
