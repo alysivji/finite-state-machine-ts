@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  type Condition,
   generateStateDiagram,
   StateMachine,
   transition,
-  type Condition,
 } from "../src/index";
 
 type PullRequestState = "draft" | "open" | "approved" | "merged" | "closed";
@@ -80,7 +80,9 @@ describe("github pull request transitions", () => {
     pr.readyForReview();
     pr.approve();
 
-    expect(() => pr.merge()).toThrow("Conditions not met for transition merge.");
+    expect(() => pr.merge()).toThrow(
+      "Conditions not met for transition merge.",
+    );
     expect(pr.state).toBe("approved");
   });
 

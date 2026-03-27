@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  type Condition,
   FiniteStateMachineError,
   generateStateDiagram,
   InvalidSourceStateError,
   StateMachine,
   TransitionConditionFailedError,
   transition,
-  type Condition,
 } from "../src/index";
 
 type LightState = "off" | "on";

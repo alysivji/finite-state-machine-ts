@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   FiniteStateMachineError,
-  TransitionExecutionError,
   generateStateDiagram,
   StateMachine,
+  TransitionExecutionError,
   transition,
 } from "../src/index";
 
@@ -101,7 +101,9 @@ describe("background job transitions", () => {
       throw new Error("expected process to throw");
     } catch (error) {
       expect(error).toBeInstanceOf(TransitionExecutionError);
-      expect((error as TransitionExecutionError<BackgroundJobState>).cause).toBeInstanceOf(Error);
+      expect(
+        (error as TransitionExecutionError<BackgroundJobState>).cause,
+      ).toBeInstanceOf(Error);
       expect(
         ((error as TransitionExecutionError<BackgroundJobState>).cause as Error)
           .message,
@@ -128,7 +130,9 @@ describe("background job transitions", () => {
   });
 
   it("generates a Mermaid state diagram from transition metadata", () => {
-    expect(generateStateDiagram(BackgroundJob, { initialState: "queued" })).toBe(
+    expect(
+      generateStateDiagram(BackgroundJob, { initialState: "queued" }),
+    ).toBe(
       `stateDiagram-v2
   state "queued" as state_0
   state "running" as state_1
