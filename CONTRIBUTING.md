@@ -28,7 +28,7 @@ make typecheck
 make pre-commit
 ```
 
-The pre-commit hook runs formatting and linting checks plus `tsc --noEmit` before a commit is created. Tests stay in the regular CI workflow instead of the commit hook.
+The pre-commit hook normalizes trailing whitespace, final newlines, and LF endings, validates YAML, and then runs formatting, linting, plus `tsc --noEmit` before a commit is created. Tests stay in the regular CI workflow instead of the commit hook.
 
 ## Project Notes
 
