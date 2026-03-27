@@ -5,6 +5,9 @@ TARGETS := $(shell awk 'BEGIN { FS = ":" } /^[A-Za-z0-9_.-]+:.*\#\# / { print $$
 help: ## Show available targets
 	@awk 'BEGIN { FS = ":.*## " } /^[A-Za-z0-9_.-]+:.*## / { printf "%-16s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 
+install: ## Install dependencies
+	npm install
+
 build: ## Build the package
 	npm run build
 

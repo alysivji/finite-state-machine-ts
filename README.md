@@ -181,6 +181,10 @@ Transition failures use these exported error types:
 - `TransitionConditionFailedError` when any configured condition returns `false`.
 - `TransitionExecutionError` when the decorated method throws or rejects. The original error is available as `error.cause`.
 
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for local setup and contribution guidelines.
+
 ## Inspiration
 
 - [django-fsm](https://github.com/viewflow/django-fsm)
