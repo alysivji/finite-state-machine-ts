@@ -32,8 +32,8 @@ const TRANSITION_DEFINITIONS = Symbol.for(
 export function transition<
   S extends string,
   TMachine extends StateMachine<S>,
-  TArgs extends unknown[],
-  TResult,
+  TArgs extends unknown[] = [],
+  TResult = void,
 >(config: TransitionConfig<S, TMachine>) {
   const sources = Array.isArray(config.source)
     ? [...config.source]
