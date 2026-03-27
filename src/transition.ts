@@ -22,7 +22,6 @@ export interface TransitionConfig<
   target: S;
   conditions?: readonly Condition<TMachine>[];
   onError?: S;
-  on_error?: S;
 }
 
 type TransitionMethod<TMachine, TArgs extends unknown[], TResult> = (
@@ -43,7 +42,7 @@ export function transition<
   const sources = Array.isArray(config.source)
     ? [...config.source]
     : [config.source];
-  const errorState = config.on_error ?? config.onError;
+  const errorState = config.onError;
 
   return function (
     target: object,

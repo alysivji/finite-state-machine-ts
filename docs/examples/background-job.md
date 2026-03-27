@@ -1,6 +1,6 @@
 # Background Job
 
-This example shows how `on_error` creates an explicit failure edge in the diagram.
+This example shows how `onError` creates an explicit failure edge in the diagram.
 
 ## Mermaid
 
@@ -40,7 +40,7 @@ class BackgroundJob extends StateMachine<BackgroundJobState> {
   @transition<BackgroundJobState, BackgroundJob, [], void>({
     source: "running",
     target: "completed",
-    on_error: "failed",
+    onError: "failed",
   })
   process() {
     if (this.shouldFail) {

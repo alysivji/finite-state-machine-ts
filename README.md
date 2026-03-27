@@ -21,70 +21,57 @@ Make sure your `tsconfig.json` enables decorators:
 ## Basic Usage
 
 ```ts
-import { StateMachine, transition, type Condition } from "finite-state-machine-ts";
+import { StateMachine, transition } from "finite-state-machine-ts";
 
-const STATES = {
-  off: "off",
-  on: "on",
-  broken: "broken",
-} as const;
+type BackgroundJobState = "queued" | "running" | "completed" | "failed";
 
-type LightState = (typeof STATES)[keyof typeof STATES];
+class BackgroundJob extends StateMachine<BackgroundJobState> {
+  shouldFail = false;
 
-class LightSwitch extends StateMachine<LightState> {
-  hasPower = true;
-
-  constructor(state: LightState = STATES.off) {
-    super(state);
+  constructor(initialState: BackgroundJobState = "queued") {
+    super(initialState);
   }
 
-  static readonly isPowered: Condition<LightSwitch> = (machine) => machine.hasPower;
-
-  @transition<LightState, LightSwitch, [], void>({
-    source: STATES.off,
-    target: STATES.on,
-    conditions: [LightSwitch.isPowered],
+  @transition<BackgroundJobState, BackgroundJob, [], void>({
+    source: "queued",
+    target: "running",
   })
-  switchOn() {
-    console.log("The light is on.");
+  start() {}
+
+  @transition<BackgroundJobState, BackgroundJob, [], void>({
+    source: "running",
+    target: "completed",
+    onError: "failed",
+  })
+  process() {
+    if (this.shouldFail) {
+      throw new Error("job failed");
+    }
   }
 
-  @transition<LightState, LightSwitch, [], void>({
-    source: STATES.on,
-    target: STATES.off,
+  @transition<BackgroundJobState, BackgroundJob, [], void>({
+    source: "failed",
+    target: "queued",
   })
-  switchOff() {
-    console.log("The light is off.");
-  }
-
-  @transition<LightState, LightSwitch, [], void>({
-    source: [STATES.off, STATES.on],
-    target: STATES.on,
-    on_error: STATES.broken,
-  })
-  overload() {
-    throw new Error("bulb exploded");
-  }
+  retry() {}
 }
 
-const light = new LightSwitch();
+const job = new BackgroundJob();
 
-light.switchOn();
-console.log(light.state); // "on"
+job.start();
+console.log(job.state); // "running"
 
-try {
-  light.switchOn();
-} catch (error) {
-  console.error(error);
-}
-
-light.hasPower = false;
-light.state = STATES.off;
+job.process();
+console.log(job.state); // "completed"
 
 try {
-  light.switchOn();
+  const failingJob = new BackgroundJob();
+  failingJob.start();
+  failingJob.shouldFail = true;
+  failingJob.process();
 } catch (error) {
-  console.error(error);
+  console.error(error); // TransitionExecutionError
+  console.log((error as Error).cause); // Error: job failed
 }
 ```
 
@@ -107,7 +94,7 @@ The `@transition` decorator wraps a method and applies runtime checks in this or
 2. Run every condition function, if provided.
 3. Execute the original method.
 4. If the method succeeds, set `this.state = target`.
-5. If the method throws or rejects, optionally set `this.state = on_error` and throw a `TransitionExecutionError` with the original error attached as `cause`.
+5. If the method throws or rejects, optionally set `this.state = onError` and throw a `TransitionExecutionError` with the original error attached as `cause`.
 
 There is no central machine config or separate state graph. Transitions live where the behavior lives: on the methods that perform the work.
 
@@ -124,7 +111,7 @@ You can generate Mermaid state diagrams directly from the transitions declared o
 ```ts
 import { generateStateDiagram } from "finite-state-machine-ts";
 
-const diagram = generateStateDiagram(LightSwitch, { initialState: STATES.off });
+const diagram = generateStateDiagram(BackgroundJob, { initialState: "queued" });
 
 console.log(diagram);
 ```
@@ -133,16 +120,15 @@ Example output:
 
 ```md
 stateDiagram-v2
-  state "off" as state_0
-  state "on" as state_1
-  state "broken" as state_2
+  state "queued" as state_0
+  state "running" as state_1
+  state "completed" as state_2
+  state "failed" as state_3
   [*] --> state_0
-  state_0 --> state_1: switchOn
-  state_1 --> state_0: switchOff
-  state_0 --> state_1: overload
-  state_0 --> state_2: overload (error)
-  state_1 --> state_1: overload
-  state_1 --> state_2: overload (error)
+  state_0 --> state_1: start
+  state_1 --> state_2: process
+  state_1 --> state_3: process (error)
+  state_3 --> state_0: retry
 ```
 
 ### CLI
@@ -180,7 +166,6 @@ interface TransitionConfig<
   target: S;
   conditions?: readonly Condition<TMachine>[];
   onError?: S;
-  on_error?: S;
 }
 ```
 

@@ -25,7 +25,7 @@ class BackgroundJob extends StateMachine<BackgroundJobState> {
   @transition<BackgroundJobState, BackgroundJob, [], void>({
     source: "running",
     target: "completed",
-    on_error: "failed",
+    onError: "failed",
   })
   process() {
     if (this.shouldFail) {
@@ -109,7 +109,7 @@ describe("background job transitions", () => {
     }
   });
 
-  it("keeps the current state when execution fails without on_error", () => {
+  it("keeps the current state when execution fails without onError", () => {
     const deployment = new Deployment("pending");
 
     expect(() => deployment.start()).toThrow(TransitionExecutionError);
