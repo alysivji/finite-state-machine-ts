@@ -104,6 +104,46 @@ There is no central machine config or separate state graph. Transitions live whe
 
 Use this library when you want a small runtime abstraction, not a full workflow engine. It keeps the API close to normal class methods and avoids the configuration overhead common in more feature-rich state machine libraries.
 
+## State Diagrams
+
+You can generate Mermaid state diagrams directly from the transitions declared on a state machine class.
+
+### Programmatic API
+
+```ts
+import { generateStateDiagram } from "finite-state-machine-ts";
+
+const diagram = generateStateDiagram(LightSwitch, { initialState: STATES.off });
+
+console.log(diagram);
+```
+
+Example output:
+
+```md
+stateDiagram-v2
+  state "off" as state_0
+  state "on" as state_1
+  state "broken" as state_2
+  [*] --> state_0
+  state_0 --> state_1: switchOn
+  state_1 --> state_0: switchOff
+  state_0 --> state_1: overload
+  state_0 --> state_2: overload (error)
+  state_1 --> state_1: overload
+  state_1 --> state_2: overload (error)
+```
+
+### CLI
+
+After building the package, use the bundled command:
+
+```bash
+fsm-draw-state-diagram --class ./dist/examples/light-switch.js:LightSwitch --initial-state off
+```
+
+The `--class` argument matches the Python library's shape: `<module-path>:<export-name>`.
+
 ## API
 
 ### `StateMachine<S>`
@@ -129,6 +169,10 @@ interface TransitionConfig<S extends string, TMachine extends StateMachine<S>> {
   on_error?: S;
 }
 ```
+
+### `generateStateDiagram(machineClass, options?)`
+
+Returns Mermaid state diagram markdown for the transitions defined on the class.
 
 ## Inspiration
 

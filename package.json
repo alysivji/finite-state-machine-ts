@@ -2,6 +2,9 @@
   "name": "finite-state-machine-ts",
   "version": "0.0.1",
   "type": "module",
+  "bin": {
+    "fsm-draw-state-diagram": "./dist/cli/fsm-draw-state-diagram.js"
+  },
   "exports": {
     ".": "./dist/index.js"
   },
@@ -12,6 +15,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
+    "@types/node": "^24.6.1",
     "typescript": "^6.0.2",
     "@vitest/coverage-v8": "^4.1.2",
     "vitest": "^4.1.2"

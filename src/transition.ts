@@ -2,6 +2,13 @@ import { StateMachine } from "./state-machine.js";
 
 export type Condition<TMachine> = (machine: TMachine) => boolean;
 
+export interface TransitionDefinition<S extends string> {
+  method: string;
+  source: readonly S[];
+  target: S;
+  onError?: S;
+}
+
 export interface TransitionConfig<
   S extends string,
   TMachine extends StateMachine<S> = StateMachine<S>,
@@ -18,6 +25,10 @@ type TransitionMethod<TMachine, TArgs extends unknown[], TResult> = (
   ...args: TArgs
 ) => TResult;
 
+const TRANSITION_DEFINITIONS = Symbol.for(
+  "finite-state-machine-ts.transition-definitions",
+);
+
 export function transition<
   S extends string,
   TMachine extends StateMachine<S>,
@@ -30,7 +41,7 @@ export function transition<
   const errorState = config.on_error ?? config.onError;
 
   return function (
-    _target: object,
+    target: object,
     propertyKey: string | symbol,
     descriptor: TypedPropertyDescriptor<
       TransitionMethod<TMachine, TArgs, TResult>
@@ -41,6 +52,13 @@ export function transition<
     if (originalMethod === undefined) {
       throw new TypeError("@transition can only be applied to methods.");
     }
+
+    defineTransition(target, {
+      method: String(propertyKey),
+      source: sources,
+      target: config.target,
+      onError: errorState,
+    });
 
     descriptor.value = function wrappedTransition(
       this: TMachine,
@@ -95,6 +113,27 @@ export function transition<
   };
 }
 
+export function getTransitionDefinitions<S extends string>(
+  machineClass: new (...args: never[]) => StateMachine<S>,
+): TransitionDefinition<S>[] {
+  const definitions: TransitionDefinition<S>[] = [];
+  let prototype = machineClass.prototype;
+
+  while (prototype !== null && prototype !== Object.prototype) {
+    const ownDefinitions = Object.prototype.hasOwnProperty.call(
+      prototype,
+      TRANSITION_DEFINITIONS,
+    )
+      ? ((prototype[TRANSITION_DEFINITIONS] as TransitionDefinition<S>[]) ?? [])
+      : [];
+
+    definitions.unshift(...ownDefinitions);
+    prototype = Object.getPrototypeOf(prototype);
+  }
+
+  return definitions;
+}
+
 function isPromiseLike<T>(value: T | Promise<T>): value is Promise<T> {
   return (
     typeof value === "object" &&
@@ -102,4 +141,19 @@ function isPromiseLike<T>(value: T | Promise<T>): value is Promise<T> {
     "then" in value &&
     typeof value.then === "function"
   );
+}
+
+function defineTransition<S extends string>(
+  target: object,
+  definition: TransitionDefinition<S>,
+): void {
+  const metadataTarget = target as Record<symbol, TransitionDefinition<S>[]>;
+  const existingDefinitions = Object.prototype.hasOwnProperty.call(
+    metadataTarget,
+    TRANSITION_DEFINITIONS,
+  )
+    ? (metadataTarget[TRANSITION_DEFINITIONS] ?? [])
+    : [];
+
+  metadataTarget[TRANSITION_DEFINITIONS] = [...existingDefinitions, definition];
 }
