@@ -1,11 +1,11 @@
 export class FiniteStateMachineError extends Error {
-  readonly name = "FiniteStateMachineError";
+  override readonly name: string = "FiniteStateMachineError";
 }
 
 export class InvalidSourceStateError<
   S extends string,
 > extends FiniteStateMachineError {
-  override readonly name = "InvalidSourceStateError";
+  override readonly name: string = "InvalidSourceStateError";
 
   constructor(
     public readonly method: string,
@@ -17,7 +17,7 @@ export class InvalidSourceStateError<
 }
 
 export class TransitionConditionFailedError extends FiniteStateMachineError {
-  override readonly name = "TransitionConditionFailedError";
+  override readonly name: string = "TransitionConditionFailedError";
 
   constructor(public readonly method: string) {
     super(`Conditions not met for transition ${method}.`);
@@ -27,7 +27,7 @@ export class TransitionConditionFailedError extends FiniteStateMachineError {
 export class TransitionExecutionError<
   S extends string,
 > extends FiniteStateMachineError {
-  override readonly name = "TransitionExecutionError";
+  override readonly name: string = "TransitionExecutionError";
   declare readonly cause: unknown;
 
   constructor(
