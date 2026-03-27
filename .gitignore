@@ -1,3 +1,9 @@
 node_modules/
 dist/
 *.tgz
+
+# test coverage
+coverage
+
+# os
+.DS_Store
