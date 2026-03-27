@@ -181,6 +181,10 @@ Transition failures use these exported error types:
 - `TransitionConditionFailedError` when any configured condition returns `false`.
 - `TransitionExecutionError` when the decorated method throws or rejects. The original error is available as `error.cause`.
 
+## Contributing
+
+To work on the library locally, run `make install` to install dependencies, then use `make test`, `make build`, or `make test-coverage` while developing.
+
 ## Inspiration
 
 - [django-fsm](https://github.com/viewflow/django-fsm)
