@@ -88,6 +88,17 @@ try {
 }
 ```
 
+## Example Docs
+
+The repo includes a small set of worked examples with Mermaid diagrams and annotated code:
+
+- [Examples index](./docs/examples/README.md)
+- [Turnstile](./docs/examples/turnstile.md)
+- [Light Switch](./docs/examples/light-switch.md)
+- [Traffic Light](./docs/examples/traffic-light.md)
+- [Background Job](./docs/examples/background-job.md)
+- [GitHub Pull Request](./docs/examples/github-pull-request.md)
+
 ## How It Works
 
 The `@transition` decorator wraps a method and applies runtime checks in this order:
