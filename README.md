@@ -107,7 +107,7 @@ The `@transition` decorator wraps a method and applies runtime checks in this or
 2. Run every condition function, if provided.
 3. Execute the original method.
 4. If the method succeeds, set `this.state = target`.
-5. If the method throws, optionally set `this.state = on_error` before rethrowing.
+5. If the method throws or rejects, optionally set `this.state = on_error` and throw a `TransitionExecutionError` with the original error attached as `cause`.
 
 There is no central machine config or separate state graph. Transitions live where the behavior lives: on the methods that perform the work.
 
@@ -169,13 +169,16 @@ class StateMachine<S extends string> {
 
 ### `transition(config)`
 
-Decorator for transition methods.
+Decorator for transition methods. Decorated methods can be synchronous or asynchronous.
 
 ```ts
-interface TransitionConfig<S extends string, TMachine extends StateMachine<S>> {
+interface TransitionConfig<
+  S extends string,
+  TMachine extends StateMachine<S> = StateMachine<S>,
+> {
   source: S | readonly S[];
   target: S;
-  conditions?: readonly Array<(machine: TMachine) => boolean>;
+  conditions?: readonly Condition<TMachine>[];
   onError?: S;
   on_error?: S;
 }
@@ -185,7 +188,15 @@ interface TransitionConfig<S extends string, TMachine extends StateMachine<S>> {
 
 Returns Mermaid state diagram markdown for the transitions defined on the class.
 
+### Errors
+
+Transition failures use these exported error types:
+
+- `InvalidSourceStateError` when the current state is not in `source`.
+- `TransitionConditionFailedError` when any configured condition returns `false`.
+- `TransitionExecutionError` when the decorated method throws or rejects. The original error is available as `error.cause`.
+
 ## Inspiration
 
 - [django-fsm](https://github.com/viewflow/django-fsm)
-- [finite-state-machine](https://github.com/alysivji/finite-state-machine).
+- [finite-state-machine](https://github.com/alysivji/finite-state-machine)
