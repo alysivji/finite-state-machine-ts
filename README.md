@@ -183,7 +183,7 @@ Transition failures use these exported error types:
 
 ## Contributing
 
-To work on the library locally, run `make install` to install dependencies, then use `make test`, `make build`, or `make test-coverage` while developing.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for local setup and contribution guidelines.
 
 ## Inspiration
 
