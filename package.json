@@ -1,6 +1,6 @@
 {
   "name": "finite-state-machine-ts",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "bin": {
     "fsm-draw-state-diagram": "./dist/cli/fsm-draw-state-diagram.js"
