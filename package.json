@@ -15,7 +15,8 @@
     "format": "biome format --write .",
     "lint": "biome lint .",
     "test": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.9",

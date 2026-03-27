@@ -8,15 +8,27 @@ This project uses `make` as the main task entry point.
 
 ```bash
 make install
+pre-commit install
+```
+
+If you do not already have `pre-commit` installed:
+
+```bash
+python3 -m pip install pre-commit
 ```
 
 ## Common Commands
 
 ```bash
+make check
 make test
 make build
 make test-coverage
+make typecheck
+make pre-commit
 ```
+
+The pre-commit hook runs formatting and linting checks plus `tsc --noEmit` before a commit is created. Tests stay in the regular CI workflow instead of the commit hook.
 
 ## Project Notes
 

@@ -1,0 +1,13 @@
+repos:
+  - repo: local
+    hooks:
+      - id: biome-check
+        name: Biome check
+        entry: npm run check
+        language: system
+        pass_filenames: false
+      - id: typecheck
+        name: TypeScript typecheck
+        entry: npm run typecheck
+        language: system
+        pass_filenames: false
