@@ -26,7 +26,8 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:coverage:ci": "vitest run --coverage --reporter=default --reporter=junit --outputFile=test-report.junit.xml",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p test/tsconfig.json"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p test/tsconfig.json",
+    "typecheck:compat": "node scripts/typecheck-compat.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.9",
