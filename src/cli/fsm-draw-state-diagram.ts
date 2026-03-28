@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import path from "node:path";
+import * as path from "node:path";
 import { pathToFileURL } from "node:url";
 import { generateStateDiagram } from "../diagram.js";
 import type { StateMachine } from "../state-machine.js";

@@ -18,6 +18,8 @@ Make sure your `tsconfig.json` enables decorators:
 }
 ```
 
+This library is tested with TypeScript `5.0.4`, `5.9.3`, and `6.0.2`.
+
 ## Basic Usage
 
 ```ts
