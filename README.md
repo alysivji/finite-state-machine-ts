@@ -1,7 +1,6 @@
 # finite-state-machine-ts
 
 [![CI](https://github.com/alysivji/finite-state-machine-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/alysivji/finite-state-machine-ts/actions/workflows/ci.yml)
-[![Pre-commit](https://github.com/alysivji/finite-state-machine-ts/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/alysivji/finite-state-machine-ts/actions/workflows/pre-commit.yml)
 [![codecov](https://codecov.io/gh/alysivji/finite-state-machine-ts/graph/badge.svg)](https://codecov.io/gh/alysivji/finite-state-machine-ts)
 [![npm version](https://img.shields.io/npm/v/finite-state-machine-ts)](https://www.npmjs.com/package/finite-state-machine-ts)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
