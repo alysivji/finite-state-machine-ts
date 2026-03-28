@@ -1,6 +1,7 @@
 export type { StateDiagramOptions } from "./diagram.js";
 export { generateStateDiagram } from "./diagram.js";
 export {
+  ConcurrentTransitionError,
   FiniteStateMachineError,
   InvalidSourceStateError,
   TransitionConditionFailedError,
