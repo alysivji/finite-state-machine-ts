@@ -65,22 +65,24 @@ jobs:
             exit 1
           fi
 
-      - name: Push release tag
+      - name: Publish release artifacts
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          PUBLISH_SUCCEEDED=0
+
+          cleanup() {
+            if [ "$PUBLISH_SUCCEEDED" != "1" ] && git ls-remote --exit-code --tags origin "refs/tags/${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+              git push --delete origin "${{ steps.version.outputs.tag }}"
+            fi
+          }
+
+          trap cleanup EXIT
+
           git tag "${{ steps.version.outputs.tag }}"
           git push origin "${{ steps.version.outputs.tag }}"
-
-      - name: Publish package to npm
-        run: npm publish --ignore-scripts
-
-      - name: Clean up tag if publish fails
-        if: failure()
-        run: |
-          if git ls-remote --exit-code --tags origin "refs/tags/${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
-            git push --delete origin "${{ steps.version.outputs.tag }}"
-          fi
+          npm publish --ignore-scripts
+          PUBLISH_SUCCEEDED=1
 
       - name: Create GitHub release
         env:
