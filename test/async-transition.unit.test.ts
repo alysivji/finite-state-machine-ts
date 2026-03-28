@@ -99,8 +99,6 @@ class AsyncBodyMachine extends StateMachine<AsyncState> {
 }
 
 class AsyncTransitionConditionErrorMachine extends StateMachine<AsyncState> {
-  gate = createDeferred<boolean>();
-
   constructor(initialState: AsyncState = "idle") {
     super(initialState);
   }
@@ -128,6 +126,31 @@ class AsyncTransitionBodyErrorMachine extends StateMachine<AsyncState> {
   })
   async start() {
     throw new TransitionConditionFailedError("inner");
+  }
+}
+
+class AsyncGuardSyncVoidBodyMachine extends StateMachine<AsyncState> {
+  gate = createDeferred<boolean>();
+  events: string[] = [];
+
+  constructor(initialState: AsyncState = "idle") {
+    super(initialState);
+  }
+
+  @transition<AsyncState, AsyncGuardSyncVoidBodyMachine>({
+    source: "idle",
+    target: "running",
+    conditions: [
+      async (machine) => {
+        machine.events.push("async-condition:start");
+        const allowed = await machine.gate.promise;
+        machine.events.push("async-condition:end");
+        return allowed;
+      },
+    ],
+  })
+  start() {
+    this.events.push("body");
   }
 }
 
@@ -207,6 +230,25 @@ describe("async transition unit semantics", () => {
 
     await expect(result).resolves.toBe("done");
     expect(machine.state).toBe("done");
+  });
+
+  it("accepts undefined from a sync body after async conditions resolve", async () => {
+    const machine = new AsyncGuardSyncVoidBodyMachine("idle");
+
+    const result = machine.start();
+
+    expect(result).toBeInstanceOf(Promise);
+    expect(machine.state).toBe("idle");
+
+    machine.gate.resolve(true);
+
+    await expect(result).resolves.toBeUndefined();
+    expect(machine.state).toBe("running");
+    expect(machine.events).toEqual([
+      "async-condition:start",
+      "async-condition:end",
+      "body",
+    ]);
   });
 
   it("wraps rejected async bodies in TransitionExecutionError and preserves the cause", async () => {

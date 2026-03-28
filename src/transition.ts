@@ -290,10 +290,13 @@ function runAsyncTransition<
       try {
         const result =
           bodyResult ??
-          executeBody?.() ??
-          (() => {
-            throw new TypeError("Async transition requires a transition body.");
-          })();
+          (executeBody
+            ? executeBody()
+            : (() => {
+                throw new TypeError(
+                  "Async transition requires a transition body.",
+                );
+              })());
 
         if (isPromiseLike(result)) {
           const value = await result;
