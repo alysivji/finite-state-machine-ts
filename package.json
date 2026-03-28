@@ -3,6 +3,14 @@
   "version": "0.1.0",
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alysivji/finite-state-machine-ts"
+  },
+  "bugs": {
+    "url": "https://github.com/alysivji/finite-state-machine-ts/issues"
+  },
+  "homepage": "https://github.com/alysivji/finite-state-machine-ts#readme",
   "files": [
     "dist",
     "README.md",
