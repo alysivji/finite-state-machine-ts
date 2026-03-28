@@ -7,12 +7,27 @@ import {
   transition,
 } from "../src/index";
 
+enum EnumJobState {
+  Pending = "pending",
+  Completed = "completed",
+}
+
 class BarrelMachine extends StateMachine<"idle" | "done"> {
   static initialState = "idle" as const;
 
   @transition<"idle" | "done", BarrelMachine>({
     source: "idle",
     target: "done",
+  })
+  finish() {}
+}
+
+class EnumMachine extends StateMachine<EnumJobState> {
+  static initialState = EnumJobState.Pending;
+
+  @transition<EnumJobState, EnumMachine>({
+    source: EnumJobState.Pending,
+    target: EnumJobState.Completed,
   })
   finish() {}
 }
@@ -41,6 +56,19 @@ describe("index barrel exports", () => {
 
     expect(() => new MissingInitialStateMachine()).toThrow(
       "State machine MissingInitialStateMachine requires an explicit state or a static initialState.",
+    );
+  });
+
+  it("supports string enum state types", () => {
+    const machine = new EnumMachine();
+
+    expect(machine.state).toBe(EnumJobState.Pending);
+
+    machine.finish();
+
+    expect(machine.state).toBe(EnumJobState.Completed);
+    expect(new EnumMachine(EnumJobState.Completed).state).toBe(
+      EnumJobState.Completed,
     );
   });
 });
