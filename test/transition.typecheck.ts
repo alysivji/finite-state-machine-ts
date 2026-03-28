@@ -17,9 +17,7 @@ type IsExact<TActual, TExpected> = [TActual] extends [TExpected]
 const isAllowed: SyncCondition<SyncGuardMachine> = () => true;
 
 class SyncGuardMachine extends StateMachine<TypecheckState> {
-  constructor(initialState: TypecheckState = "idle") {
-    super(initialState);
-  }
+  static initialState = "idle" as const;
 
   @transition<TypecheckState, SyncGuardMachine>({
     source: "idle",
@@ -36,18 +34,14 @@ const syncConfig: TransitionConfig<TypecheckState, SyncGuardMachine> = {
 };
 
 class StoredSyncConfigMachine extends StateMachine<TypecheckState> {
-  constructor(initialState: TypecheckState = "idle") {
-    super(initialState);
-  }
+  static initialState = "idle" as const;
 
   @transition(syncConfig)
   finish() {}
 }
 
 class AsyncGuardPromiseMachine extends StateMachine<TypecheckState> {
-  constructor(initialState: TypecheckState = "idle") {
-    super(initialState);
-  }
+  static initialState = "idle" as const;
 
   @transition<TypecheckState, AsyncGuardPromiseMachine>({
     source: "idle",
@@ -68,18 +62,14 @@ const asyncConfig: TransitionConfig<
 };
 
 class StoredAsyncConfigMachine extends StateMachine<TypecheckState> {
-  constructor(initialState: TypecheckState = "idle") {
-    super(initialState);
-  }
+  static initialState = "idle" as const;
 
   @transition(asyncConfig)
   async finish() {}
 }
 
 class InvalidAsyncGuardMachine extends StateMachine<TypecheckState> {
-  constructor(initialState: TypecheckState = "idle") {
-    super(initialState);
-  }
+  static initialState = "idle" as const;
 
   // @ts-expect-error Async conditions require a promise-returning method.
   @transition<TypecheckState, InvalidAsyncGuardMachine>({

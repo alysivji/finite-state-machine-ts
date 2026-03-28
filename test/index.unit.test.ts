@@ -8,9 +8,7 @@ import {
 } from "../src/index";
 
 class BarrelMachine extends StateMachine<"idle" | "done"> {
-  constructor(initialState: "idle" | "done" = "idle") {
-    super(initialState);
-  }
+  static initialState = "idle" as const;
 
   @transition<"idle" | "done", BarrelMachine>({
     source: "idle",
@@ -31,8 +29,18 @@ describe("index barrel exports", () => {
     const machine = new indexModule.StateMachine<"idle" | "done">("idle");
 
     expect(machine.state).toBe("idle");
+    expect(new BarrelMachine().state).toBe("idle");
+    expect(new BarrelMachine("done").state).toBe("done");
     expect(
       generateStateDiagram(BarrelMachine, { initialState: "idle" }),
     ).toContain("stateDiagram-v2");
+  });
+
+  it("requires subclasses to declare an initial state when no explicit state is passed", () => {
+    class MissingInitialStateMachine extends StateMachine<"idle" | "done"> {}
+
+    expect(() => new MissingInitialStateMachine()).toThrow(
+      "State machine MissingInitialStateMachine requires an explicit state or a static initialState.",
+    );
   });
 });

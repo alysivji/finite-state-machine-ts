@@ -27,14 +27,11 @@ function createDeferred<T>(): Deferred<T> {
 type DeploymentState = "pending" | "running" | "completed" | "failed";
 
 class AsyncDeployment extends StateMachine<DeploymentState> {
+  static initialState = "pending" as const;
   capacityAvailable = true;
   approvalGate = createDeferred<boolean>();
   startGate = createDeferred<string>();
   completeGate = createDeferred<void>();
-
-  constructor(initialState: DeploymentState = "pending") {
-    super(initialState);
-  }
 
   @transition<DeploymentState, AsyncDeployment, [], Promise<string>>({
     source: "pending",

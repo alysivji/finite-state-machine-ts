@@ -13,12 +13,9 @@ import { getTransitionDefinitions } from "../src/transition";
 type SyncState = "idle" | "ready" | "done" | "failed";
 
 class SyncMachine extends StateMachine<SyncState> {
+  static initialState = "idle" as const;
   allow = true;
   events: string[] = [];
-
-  constructor(initialState: SyncState = "idle") {
-    super(initialState);
-  }
 
   @transition<SyncState, SyncMachine, [], string>({
     source: "idle",
@@ -54,9 +51,7 @@ class SyncMachine extends StateMachine<SyncState> {
 }
 
 class SyncConditionThrowMachine extends StateMachine<SyncState> {
-  constructor(initialState: SyncState = "idle") {
-    super(initialState);
-  }
+  static initialState = "idle" as const;
 
   @transition<SyncState, SyncConditionThrowMachine>({
     source: "idle",
@@ -72,9 +67,7 @@ class SyncConditionThrowMachine extends StateMachine<SyncState> {
 }
 
 class NoOnErrorMachine extends StateMachine<"idle" | "done"> {
-  constructor(initialState: "idle" | "done" = "idle") {
-    super(initialState);
-  }
+  static initialState = "idle" as const;
 
   @transition<"idle" | "done", NoOnErrorMachine>({
     source: "idle",
@@ -86,9 +79,7 @@ class NoOnErrorMachine extends StateMachine<"idle" | "done"> {
 }
 
 class QuotedStateMachine extends StateMachine<'say "hi"' | "done"> {
-  constructor(initialState: 'say "hi"' | "done" = 'say "hi"') {
-    super(initialState);
-  }
+  static initialState = 'say "hi"' as const;
 
   @transition<'say "hi"' | "done", QuotedStateMachine>({
     source: 'say "hi"',
@@ -119,6 +110,11 @@ describe("transition unit semantics", () => {
     expect(result).toBe("prepared");
     expect(machine.state).toBe("ready");
     expect(machine.events).toEqual(["condition", "body"]);
+  });
+
+  it("defaults to the machine's starting state but can be restored from any valid state", () => {
+    expect(new SyncMachine().state).toBe("idle");
+    expect(new SyncMachine("ready").state).toBe("ready");
   });
 
   it("throws InvalidSourceStateError for an invalid source state", () => {
@@ -239,9 +235,7 @@ describe("transition unit semantics", () => {
     );
 
     class MissingMetadataMachine extends StateMachine<"idle" | "done"> {
-      constructor(initialState: "idle" | "done" = "idle") {
-        super(initialState);
-      }
+      static initialState = "idle" as const;
     }
 
     Object.defineProperty(
@@ -263,9 +257,7 @@ describe("transition unit semantics", () => {
     );
 
     class UndefinedMetadataBase extends StateMachine<"idle" | "done"> {
-      constructor(initialState: "idle" | "done" = "idle") {
-        super(initialState);
-      }
+      static initialState = "idle" as const;
     }
 
     Object.defineProperty(

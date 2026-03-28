@@ -28,13 +28,10 @@ function createDeferred<T>(): Deferred<T> {
 type AsyncState = "idle" | "running" | "done" | "failed";
 
 class AsyncConditionMachine extends StateMachine<AsyncState> {
+  static initialState = "idle" as const;
   allow = true;
   events: string[] = [];
   gate = createDeferred<boolean>();
-
-  constructor(initialState: AsyncState = "idle") {
-    super(initialState);
-  }
 
   @transition<AsyncState, AsyncConditionMachine, [], Promise<string>>({
     source: "idle",
@@ -76,11 +73,8 @@ class AsyncConditionMachine extends StateMachine<AsyncState> {
 }
 
 class AsyncBodyMachine extends StateMachine<AsyncState> {
+  static initialState = "idle" as const;
   bodyGate = createDeferred<string>();
-
-  constructor(initialState: AsyncState = "idle") {
-    super(initialState);
-  }
 
   @transition<AsyncState, AsyncBodyMachine, [], Promise<string>>({
     source: "idle",
@@ -99,9 +93,7 @@ class AsyncBodyMachine extends StateMachine<AsyncState> {
 }
 
 class AsyncTransitionConditionErrorMachine extends StateMachine<AsyncState> {
-  constructor(initialState: AsyncState = "idle") {
-    super(initialState);
-  }
+  static initialState = "idle" as const;
 
   @transition<AsyncState, AsyncTransitionConditionErrorMachine>({
     source: "idle",
@@ -115,9 +107,7 @@ class AsyncTransitionConditionErrorMachine extends StateMachine<AsyncState> {
 }
 
 class AsyncTransitionBodyErrorMachine extends StateMachine<AsyncState> {
-  constructor(initialState: AsyncState = "idle") {
-    super(initialState);
-  }
+  static initialState = "idle" as const;
 
   @transition<AsyncState, AsyncTransitionBodyErrorMachine, [], Promise<void>>({
     source: "idle",
@@ -130,12 +120,9 @@ class AsyncTransitionBodyErrorMachine extends StateMachine<AsyncState> {
 }
 
 class AsyncGuardSyncVoidBodyMachine extends StateMachine<AsyncState> {
+  static initialState = "idle" as const;
   gate = createDeferred<boolean>();
   events: string[] = [];
-
-  constructor(initialState: AsyncState = "idle") {
-    super(initialState);
-  }
 
   @transition<AsyncState, AsyncGuardSyncVoidBodyMachine>({
     source: "idle",
@@ -155,14 +142,11 @@ class AsyncGuardSyncVoidBodyMachine extends StateMachine<AsyncState> {
 }
 
 class MultiAsyncConditionMachine extends StateMachine<AsyncState> {
+  static initialState = "idle" as const;
   firstGate = createDeferred<boolean>();
   secondGate = createDeferred<boolean>();
   allowLateCondition = true;
   events: string[] = [];
-
-  constructor(initialState: AsyncState = "idle") {
-    super(initialState);
-  }
 
   @transition<AsyncState, MultiAsyncConditionMachine>({
     source: "idle",
