@@ -12,7 +12,7 @@ for (const version of versions) {
   for (const command of commands) {
     execFileSync(
       "npm",
-      ["exec", `--package=typescript@${version}`, "--", ...command],
+      ["exec", "--yes", `--package=typescript@${version}`, "--", ...command],
       {
         stdio: "inherit",
       },
