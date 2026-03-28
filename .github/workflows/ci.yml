@@ -34,6 +34,12 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Upload bundle analysis to Codecov
+        if: matrix.node == '24'
+        env:
+          BUNDLE_ANALYZER_UPLOAD_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: npm run codecov:bundle-analysis
+
       - name: Test
         run: npm run test:coverage
 

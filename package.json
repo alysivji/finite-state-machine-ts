@@ -18,6 +18,7 @@
   "scripts": {
     "build": "tsc",
     "check": "biome check .",
+    "codecov:bundle-analysis": "node scripts/codecov-bundle-analysis.mjs",
     "format": "biome format --write .",
     "lint": "biome lint .",
     "pack:check": "npm pack --dry-run",
@@ -28,6 +29,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.9",
+    "@codecov/bundle-analyzer": "^1.9.1",
     "@types/node": "^24.6.1",
     "@vitest/coverage-v8": "^4.1.2",
     "typescript": "^6.0.2",
