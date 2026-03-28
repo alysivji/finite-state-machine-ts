@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   ConcurrentTransitionError,
+  InvalidSourceStateError,
   StateMachine,
   TransitionConditionFailedError,
   TransitionExecutionError,
@@ -66,6 +67,12 @@ class AsyncConditionMachine extends StateMachine<AsyncState> {
     target: "done",
   })
   finish() {}
+
+  @transition<AsyncState, AsyncConditionMachine>({
+    source: "running",
+    target: "done",
+  })
+  complete() {}
 }
 
 class AsyncBodyMachine extends StateMachine<AsyncState> {
@@ -89,6 +96,62 @@ class AsyncBodyMachine extends StateMachine<AsyncState> {
     target: "running",
   })
   markRunning() {}
+}
+
+class AsyncTransitionConditionErrorMachine extends StateMachine<AsyncState> {
+  constructor(initialState: AsyncState = "idle") {
+    super(initialState);
+  }
+
+  @transition<AsyncState, AsyncTransitionConditionErrorMachine>({
+    source: "idle",
+    target: "running",
+    onError: "failed",
+    conditions: [
+      () => Promise.reject(new TransitionConditionFailedError("inner")),
+    ],
+  })
+  start() {}
+}
+
+class AsyncTransitionBodyErrorMachine extends StateMachine<AsyncState> {
+  constructor(initialState: AsyncState = "idle") {
+    super(initialState);
+  }
+
+  @transition<AsyncState, AsyncTransitionBodyErrorMachine, [], Promise<void>>({
+    source: "idle",
+    target: "running",
+    onError: "failed",
+  })
+  async start() {
+    throw new TransitionConditionFailedError("inner");
+  }
+}
+
+class AsyncGuardSyncVoidBodyMachine extends StateMachine<AsyncState> {
+  gate = createDeferred<boolean>();
+  events: string[] = [];
+
+  constructor(initialState: AsyncState = "idle") {
+    super(initialState);
+  }
+
+  @transition<AsyncState, AsyncGuardSyncVoidBodyMachine>({
+    source: "idle",
+    target: "running",
+    conditions: [
+      async (machine) => {
+        machine.events.push("async-condition:start");
+        const allowed = await machine.gate.promise;
+        machine.events.push("async-condition:end");
+        return allowed;
+      },
+    ],
+  })
+  start() {
+    this.events.push("body");
+  }
 }
 
 describe("async transition unit semantics", () => {
@@ -142,6 +205,19 @@ describe("async transition unit semantics", () => {
     expect(machine.state).toBe("failed");
   });
 
+  it("wraps async condition rejections that throw TransitionConditionFailedError", async () => {
+    const machine = new AsyncTransitionConditionErrorMachine("idle");
+    const result = machine.start();
+
+    await expect(result).rejects.toThrow(TransitionExecutionError);
+    await expect(result).rejects.toMatchObject({
+      cause: expect.objectContaining({
+        message: "Conditions not met for transition inner.",
+      }),
+    });
+    expect(machine.state).toBe("failed");
+  });
+
   it("returns a promise for async bodies and commits state only after resolution", async () => {
     const machine = new AsyncBodyMachine("idle");
 
@@ -156,6 +232,25 @@ describe("async transition unit semantics", () => {
     expect(machine.state).toBe("done");
   });
 
+  it("accepts undefined from a sync body after async conditions resolve", async () => {
+    const machine = new AsyncGuardSyncVoidBodyMachine("idle");
+
+    const result = machine.start();
+
+    expect(result).toBeInstanceOf(Promise);
+    expect(machine.state).toBe("idle");
+
+    machine.gate.resolve(true);
+
+    await expect(result).resolves.toBeUndefined();
+    expect(machine.state).toBe("running");
+    expect(machine.events).toEqual([
+      "async-condition:start",
+      "async-condition:end",
+      "body",
+    ]);
+  });
+
   it("wraps rejected async bodies in TransitionExecutionError and preserves the cause", async () => {
     const machine = new AsyncBodyMachine("idle");
 
@@ -165,6 +260,19 @@ describe("async transition unit semantics", () => {
     await expect(result).rejects.toThrow(TransitionExecutionError);
     await expect(result).rejects.toMatchObject({
       cause: expect.objectContaining({ message: "body failed" }),
+    });
+    expect(machine.state).toBe("failed");
+  });
+
+  it("wraps async body throws that use TransitionConditionFailedError", async () => {
+    const machine = new AsyncTransitionBodyErrorMachine("idle");
+    const result = machine.start();
+
+    await expect(result).rejects.toThrow(TransitionExecutionError);
+    await expect(result).rejects.toMatchObject({
+      cause: expect.objectContaining({
+        message: "Conditions not met for transition inner.",
+      }),
     });
     expect(machine.state).toBe("failed");
   });
@@ -186,6 +294,19 @@ describe("async transition unit semantics", () => {
     const nextTransition = freshMachine.start();
     freshMachine.gate.resolve(true);
     await expect(nextTransition).resolves.toBe("started");
+  });
+
+  it("checks source state before overlap blocking when an async transition is pending", async () => {
+    const machine = new AsyncConditionMachine("idle");
+    const pendingTransition = machine.start();
+
+    try {
+      expect(() => machine.complete()).toThrow(InvalidSourceStateError);
+      expect(() => machine.complete()).not.toThrow(ConcurrentTransitionError);
+    } finally {
+      machine.gate.resolve(true);
+      await pendingTransition;
+    }
   });
 
   it("blocks overlapping transitions while an async body is pending and clears the marker after failure", async () => {

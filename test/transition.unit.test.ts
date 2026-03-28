@@ -53,6 +53,24 @@ class SyncMachine extends StateMachine<SyncState> {
   }
 }
 
+class SyncConditionThrowMachine extends StateMachine<SyncState> {
+  constructor(initialState: SyncState = "idle") {
+    super(initialState);
+  }
+
+  @transition<SyncState, SyncConditionThrowMachine>({
+    source: "idle",
+    target: "ready",
+    onError: "failed",
+    conditions: [
+      () => {
+        throw new Error("guard failed");
+      },
+    ],
+  })
+  start() {}
+}
+
 class NoOnErrorMachine extends StateMachine<"idle" | "done"> {
   constructor(initialState: "idle" | "done" = "idle") {
     super(initialState);
@@ -100,6 +118,25 @@ describe("transition unit semantics", () => {
     );
     expect(machine.state).toBe("idle");
     expect(machine.events).toEqual(["condition", "condition", "condition"]);
+  });
+
+  it("wraps sync condition throws in TransitionExecutionError and applies onError", () => {
+    const machine = new SyncConditionThrowMachine("idle");
+    let thrown: unknown;
+    try {
+      machine.start();
+      throw new Error("expected start to throw");
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(TransitionExecutionError);
+    expect((thrown as TransitionExecutionError<SyncState>).cause).toMatchObject(
+      {
+        message: "guard failed",
+      },
+    );
+    expect(machine.state).toBe("failed");
   });
 
   it("wraps sync body throws in TransitionExecutionError and applies onError", () => {
