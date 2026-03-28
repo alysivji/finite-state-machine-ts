@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vitest";
 import {
-  type Condition,
   generateStateDiagram,
   InvalidSourceStateError,
   StateMachine,
+  type SyncCondition,
   TransitionConditionFailedError,
   transition,
 } from "../../src/index";
 
 type LightState = "off" | "on";
 
-const isPowered: Condition<LightSwitch> = (machine) => machine.hasPower;
+const isPowered: SyncCondition<LightSwitch> = (machine) => machine.hasPower;
 
 class LightSwitch extends StateMachine<LightState> {
   hasPower = true;

@@ -6,9 +6,11 @@ import {
 } from "./errors.js";
 import type { StateMachine } from "./state-machine.js";
 
-export type Condition<TMachine> = (
-  machine: TMachine,
-) => boolean | Promise<boolean>;
+export type SyncCondition<TMachine> = (machine: TMachine) => boolean;
+export type AsyncCondition<TMachine> = (machine: TMachine) => Promise<boolean>;
+export type Condition<TMachine> =
+  | SyncCondition<TMachine>
+  | AsyncCondition<TMachine>;
 
 export interface TransitionDefinition<S extends string> {
   method: string;
@@ -20,10 +22,11 @@ export interface TransitionDefinition<S extends string> {
 export interface TransitionConfig<
   S extends string,
   TMachine extends StateMachine<S> = StateMachine<S>,
+  TCondition extends Condition<TMachine> = SyncCondition<TMachine>,
 > {
   source: S | readonly S[];
   target: S;
-  conditions?: readonly Condition<TMachine>[];
+  conditions?: readonly TCondition[];
   onError?: S;
 }
 
@@ -47,21 +50,53 @@ interface InFlightTransition<S extends string> {
 export function transition<
   S extends string,
   TMachine extends StateMachine<S>,
-  TArgs extends unknown[] = [],
-  TResult = void,
->(config: TransitionConfig<S, TMachine>) {
+  TArgs extends unknown[] = unknown[],
+  TResult = unknown,
+>(
+  config: TransitionConfig<S, TMachine, SyncCondition<TMachine>>,
+): <TActualArgs extends TArgs = TArgs, TActualResult extends TResult = TResult>(
+  target: object,
+  propertyKey: string | symbol,
+  descriptor: TypedPropertyDescriptor<
+    TransitionMethod<TMachine, TActualArgs, TActualResult>
+  >,
+) => TypedPropertyDescriptor<
+  TransitionMethod<TMachine, TActualArgs, TActualResult>
+>;
+export function transition<
+  S extends string,
+  TMachine extends StateMachine<S>,
+  TArgs extends unknown[] = unknown[],
+  TResult extends Promise<unknown> = Promise<unknown>,
+>(
+  config: TransitionConfig<S, TMachine, Condition<TMachine>>,
+): <TActualArgs extends TArgs = TArgs, TActualResult extends TResult = TResult>(
+  target: object,
+  propertyKey: string | symbol,
+  descriptor: TypedPropertyDescriptor<
+    TransitionMethod<TMachine, TActualArgs, TActualResult>
+  >,
+) => TypedPropertyDescriptor<
+  TransitionMethod<TMachine, TActualArgs, TActualResult>
+>;
+export function transition<S extends string, TMachine extends StateMachine<S>>(
+  config: TransitionConfig<S, TMachine, Condition<TMachine>>,
+) {
   const sources = Array.isArray(config.source)
     ? [...config.source]
     : [config.source];
   const errorState = config.onError;
 
-  return (
+  return function decorateTransition<
+    TArgs extends unknown[] = unknown[],
+    TResult = unknown,
+  >(
     target: object,
     propertyKey: string | symbol,
     descriptor: TypedPropertyDescriptor<
       TransitionMethod<TMachine, TArgs, TResult>
     >,
-  ): TypedPropertyDescriptor<TransitionMethod<TMachine, TArgs, TResult>> => {
+  ): TypedPropertyDescriptor<TransitionMethod<TMachine, TArgs, TResult>> {
     const originalMethod = descriptor.value;
 
     if (originalMethod === undefined) {

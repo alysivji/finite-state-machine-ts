@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
-  type Condition,
   generateStateDiagram,
   StateMachine,
+  type SyncCondition,
   TransitionConditionFailedError,
   transition,
 } from "../../src/index";
 
 type PullRequestState = "draft" | "open" | "approved" | "merged" | "closed";
 
-const hasAtLeastOneApproval: Condition<GithubPullRequest> = (machine) =>
+const hasAtLeastOneApproval: SyncCondition<GithubPullRequest> = (machine) =>
   machine.approvals >= 1;
 
 class GithubPullRequest extends StateMachine<PullRequestState> {
