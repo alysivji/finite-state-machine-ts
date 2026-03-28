@@ -26,11 +26,8 @@ import { StateMachine, transition } from "finite-state-machine-ts";
 type BackgroundJobState = "queued" | "running" | "completed" | "failed";
 
 class BackgroundJob extends StateMachine<BackgroundJobState> {
+  static initialState = "queued" as const;
   shouldFail = false;
-
-  constructor(initialState: BackgroundJobState = "queued") {
-    super(initialState);
-  }
 
   @transition<BackgroundJobState, BackgroundJob, [], void>({
     source: "queued",
@@ -75,6 +72,8 @@ try {
 }
 ```
 
+`new Machine()` starts from `static initialState`. Passing a state still restores a persisted machine from any valid state: `new BackgroundJob("failed")`.
+
 ## Example Docs
 
 The repo includes a small set of worked examples with Mermaid diagrams and annotated code:
@@ -116,9 +115,7 @@ import {
 type DeploymentState = "pending" | "running" | "completed";
 
 class Deployment extends StateMachine<DeploymentState> {
-  constructor(initialState: DeploymentState = "pending") {
-    super(initialState);
-  }
+  static initialState = "pending" as const;
 
   @transition<DeploymentState, Deployment, [], Promise<string>>({
     source: "pending",
@@ -204,7 +201,8 @@ A minimal base class that stores the current `state`.
 
 ```ts
 class StateMachine<S extends string> {
-  constructor(public state: S) {}
+  static initialState?: string;
+  constructor(state?: S);
 }
 ```
 

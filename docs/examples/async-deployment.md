@@ -30,9 +30,7 @@ type DeploymentState = "pending" | "running" | "completed" | "failed";
 class AsyncDeployment extends StateMachine<DeploymentState> {
   capacityAvailable = true;
 
-  constructor(initialState: DeploymentState = "pending") {
-    super(initialState);
-  }
+  static initialState = "pending" as const;
 
   @transition<DeploymentState, AsyncDeployment, [], Promise<string>>({
     source: "pending",

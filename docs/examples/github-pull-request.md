@@ -38,9 +38,7 @@ const hasAtLeastOneApproval: SyncCondition<GithubPullRequest> = (machine) =>
 class GithubPullRequest extends StateMachine<PullRequestState> {
   approvals = 0;
 
-  constructor(initialState: PullRequestState = "draft") {
-    super(initialState);
-  }
+  static initialState = "draft" as const;
 
   @transition<PullRequestState, GithubPullRequest, [], void>({
     source: "draft",

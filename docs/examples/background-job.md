@@ -25,11 +25,8 @@ import { StateMachine, transition } from "finite-state-machine-ts";
 type BackgroundJobState = "queued" | "running" | "completed" | "failed";
 
 class BackgroundJob extends StateMachine<BackgroundJobState> {
+  static initialState = "queued" as const;
   shouldFail = false;
-
-  constructor(initialState: BackgroundJobState = "queued") {
-    super(initialState);
-  }
 
   @transition<BackgroundJobState, BackgroundJob, [], void>({
     source: "queued",

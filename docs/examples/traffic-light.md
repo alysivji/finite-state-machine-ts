@@ -23,9 +23,7 @@ import { StateMachine, transition } from "finite-state-machine-ts";
 type TrafficLightState = "red" | "green" | "yellow";
 
 class TrafficLight extends StateMachine<TrafficLightState> {
-  constructor(initialState: TrafficLightState = "red") {
-    super(initialState);
-  }
+  static initialState = "red" as const;
 
   @transition<TrafficLightState, TrafficLight, [], void>({
     source: "red",
