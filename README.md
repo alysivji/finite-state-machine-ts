@@ -202,6 +202,7 @@ A minimal base class that stores the current `state`.
 ```ts
 class StateMachine<S extends string> {
   static initialState?: string;
+  state: S;
   constructor(state?: S);
 }
 ```

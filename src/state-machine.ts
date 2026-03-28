@@ -20,6 +20,6 @@ function resolveInitialState<S extends string>(machine: StateMachine<S>): S {
   }
 
   throw new TypeError(
-    `State machine ${machineClass.name ?? "AnonymousStateMachine"} requires an explicit state or a static initialState.`,
+    `State machine ${machineClass.name || "AnonymousStateMachine"} requires an explicit state or a static initialState.`,
   );
 }
