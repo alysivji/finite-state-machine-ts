@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: Biome](https://img.shields.io/badge/code%20style-biome-60a5fa)](https://biomejs.dev/)
 
-`finite-state-machine-ts` is a lightweight, decorator-based finite state machine for TypeScript. It ports the ergonomics of the original Python library to modern TypeScript: define transitions directly on class methods, keep state on the instance, and let runtime validation enforce allowed state changes.
+`finite-state-machine-ts` is a lightweight, decorator-based finite state machine for TypeScript. Define transitions directly on class methods, keep state on the instance, and let runtime validation enforce allowed state changes.
 
 ## Installation
 
