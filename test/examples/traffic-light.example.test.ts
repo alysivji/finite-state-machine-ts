@@ -9,7 +9,7 @@ import {
 type TrafficLightState = "red" | "green" | "yellow";
 
 class TrafficLight extends StateMachine<TrafficLightState> {
-  static initialState = "red" as const;
+  static initialState: TrafficLightState = "red";
 
   @transition<TrafficLightState, TrafficLight>({
     source: "red",

@@ -10,7 +10,7 @@ import {
 type BackgroundJobState = "queued" | "running" | "completed" | "failed";
 
 class BackgroundJob extends StateMachine<BackgroundJobState> {
-  static initialState = "queued" as const;
+  static initialState: BackgroundJobState = "queued";
   shouldFail = false;
 
   @transition<BackgroundJobState, BackgroundJob>({

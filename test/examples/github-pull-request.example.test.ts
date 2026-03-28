@@ -13,7 +13,7 @@ const hasAtLeastOneApproval: SyncCondition<GithubPullRequest> = (machine) =>
   machine.approvals >= 1;
 
 class GithubPullRequest extends StateMachine<PullRequestState> {
-  static initialState = "draft" as const;
+  static initialState: PullRequestState = "draft";
   approvals = 0;
 
   @transition<PullRequestState, GithubPullRequest>({

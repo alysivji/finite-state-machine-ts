@@ -22,7 +22,7 @@ import { StateMachine, transition } from "finite-state-machine-ts";
 type TurnstileState = "closed" | "open";
 
 class Turnstile extends StateMachine<TurnstileState> {
-  static initialState = "closed" as const;
+  static initialState: TurnstileState = "closed";
 
   @transition<TurnstileState, Turnstile, [], void>({
     source: ["closed", "open"],

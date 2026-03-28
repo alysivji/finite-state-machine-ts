@@ -27,7 +27,7 @@ function createDeferred<T>(): Deferred<T> {
 type DeploymentState = "pending" | "running" | "completed" | "failed";
 
 class AsyncDeployment extends StateMachine<DeploymentState> {
-  static initialState = "pending" as const;
+  static initialState: DeploymentState = "pending";
   capacityAvailable = true;
   approvalGate = createDeferred<boolean>();
   startGate = createDeferred<string>();

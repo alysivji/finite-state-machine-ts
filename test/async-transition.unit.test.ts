@@ -28,7 +28,7 @@ function createDeferred<T>(): Deferred<T> {
 type AsyncState = "idle" | "running" | "done" | "failed";
 
 class AsyncConditionMachine extends StateMachine<AsyncState> {
-  static initialState = "idle" as const;
+  static initialState: AsyncState = "idle";
   allow = true;
   events: string[] = [];
   gate = createDeferred<boolean>();
@@ -73,7 +73,7 @@ class AsyncConditionMachine extends StateMachine<AsyncState> {
 }
 
 class AsyncBodyMachine extends StateMachine<AsyncState> {
-  static initialState = "idle" as const;
+  static initialState: AsyncState = "idle";
   bodyGate = createDeferred<string>();
 
   @transition<AsyncState, AsyncBodyMachine, [], Promise<string>>({
@@ -93,7 +93,7 @@ class AsyncBodyMachine extends StateMachine<AsyncState> {
 }
 
 class AsyncTransitionConditionErrorMachine extends StateMachine<AsyncState> {
-  static initialState = "idle" as const;
+  static initialState: AsyncState = "idle";
 
   @transition<AsyncState, AsyncTransitionConditionErrorMachine>({
     source: "idle",
@@ -107,7 +107,7 @@ class AsyncTransitionConditionErrorMachine extends StateMachine<AsyncState> {
 }
 
 class AsyncTransitionBodyErrorMachine extends StateMachine<AsyncState> {
-  static initialState = "idle" as const;
+  static initialState: AsyncState = "idle";
 
   @transition<AsyncState, AsyncTransitionBodyErrorMachine, [], Promise<void>>({
     source: "idle",
@@ -120,7 +120,7 @@ class AsyncTransitionBodyErrorMachine extends StateMachine<AsyncState> {
 }
 
 class AsyncGuardSyncVoidBodyMachine extends StateMachine<AsyncState> {
-  static initialState = "idle" as const;
+  static initialState: AsyncState = "idle";
   gate = createDeferred<boolean>();
   events: string[] = [];
 
@@ -142,7 +142,7 @@ class AsyncGuardSyncVoidBodyMachine extends StateMachine<AsyncState> {
 }
 
 class MultiAsyncConditionMachine extends StateMachine<AsyncState> {
-  static initialState = "idle" as const;
+  static initialState: AsyncState = "idle";
   firstGate = createDeferred<boolean>();
   secondGate = createDeferred<boolean>();
   allowLateCondition = true;

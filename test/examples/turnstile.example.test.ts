@@ -9,7 +9,7 @@ import {
 type TurnstileState = "closed" | "open";
 
 class Turnstile extends StateMachine<TurnstileState> {
-  static initialState = "closed" as const;
+  static initialState: TurnstileState = "closed";
 
   @transition<TurnstileState, Turnstile>({
     source: ["closed", "open"],

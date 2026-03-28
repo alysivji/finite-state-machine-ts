@@ -26,7 +26,7 @@ import { StateMachine, transition } from "finite-state-machine-ts";
 type BackgroundJobState = "queued" | "running" | "completed" | "failed";
 
 class BackgroundJob extends StateMachine<BackgroundJobState> {
-  static initialState = "queued" as const;
+  static initialState: BackgroundJobState = "queued";
   shouldFail = false;
 
   @transition<BackgroundJobState, BackgroundJob, [], void>({
@@ -115,7 +115,7 @@ import {
 type DeploymentState = "pending" | "running" | "completed";
 
 class Deployment extends StateMachine<DeploymentState> {
-  static initialState = "pending" as const;
+  static initialState: DeploymentState = "pending";
 
   @transition<DeploymentState, Deployment, [], Promise<string>>({
     source: "pending",
@@ -200,7 +200,7 @@ The `--class` argument matches the Python library's shape: `<module-path>:<expor
 A minimal base class that stores the current `state`.
 
 ```ts
-class StateMachine<S extends string> {
+declare class StateMachine<S extends string> {
   static initialState?: string;
   state: S;
   constructor(state?: S);

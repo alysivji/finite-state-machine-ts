@@ -13,7 +13,7 @@ import { getTransitionDefinitions } from "../src/transition";
 type SyncState = "idle" | "ready" | "done" | "failed";
 
 class SyncMachine extends StateMachine<SyncState> {
-  static initialState = "idle" as const;
+  static initialState: SyncState = "idle";
   allow = true;
   events: string[] = [];
 
@@ -51,7 +51,7 @@ class SyncMachine extends StateMachine<SyncState> {
 }
 
 class SyncConditionThrowMachine extends StateMachine<SyncState> {
-  static initialState = "idle" as const;
+  static initialState: SyncState = "idle";
 
   @transition<SyncState, SyncConditionThrowMachine>({
     source: "idle",
@@ -67,7 +67,7 @@ class SyncConditionThrowMachine extends StateMachine<SyncState> {
 }
 
 class NoOnErrorMachine extends StateMachine<"idle" | "done"> {
-  static initialState = "idle" as const;
+  static initialState: "idle" | "done" = "idle";
 
   @transition<"idle" | "done", NoOnErrorMachine>({
     source: "idle",
@@ -79,7 +79,7 @@ class NoOnErrorMachine extends StateMachine<"idle" | "done"> {
 }
 
 class QuotedStateMachine extends StateMachine<'say "hi"' | "done"> {
-  static initialState = 'say "hi"' as const;
+  static initialState: 'say "hi"' | "done" = 'say "hi"';
 
   @transition<'say "hi"' | "done", QuotedStateMachine>({
     source: 'say "hi"',
@@ -235,7 +235,7 @@ describe("transition unit semantics", () => {
     );
 
     class MissingMetadataMachine extends StateMachine<"idle" | "done"> {
-      static initialState = "idle" as const;
+      static initialState: "idle" | "done" = "idle";
     }
 
     Object.defineProperty(
@@ -257,7 +257,7 @@ describe("transition unit semantics", () => {
     );
 
     class UndefinedMetadataBase extends StateMachine<"idle" | "done"> {
-      static initialState = "idle" as const;
+      static initialState: "idle" | "done" = "idle";
     }
 
     Object.defineProperty(

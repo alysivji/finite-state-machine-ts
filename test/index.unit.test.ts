@@ -13,7 +13,7 @@ enum EnumJobState {
 }
 
 class BarrelMachine extends StateMachine<"idle" | "done"> {
-  static initialState = "idle" as const;
+  static initialState: "idle" | "done" = "idle";
 
   @transition<"idle" | "done", BarrelMachine>({
     source: "idle",
