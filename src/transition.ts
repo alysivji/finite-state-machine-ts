@@ -81,6 +81,12 @@ export function transition<
     ): TResult {
       const methodName = String(propertyKey);
       const targetState = config.target;
+
+      if (!sources.includes(this.state)) {
+        throw new InvalidSourceStateError(methodName, this.state, sources);
+      }
+
+      const sourceState = this.state;
       const inFlightTransition = getInFlightTransition(this);
 
       if (inFlightTransition !== undefined) {
@@ -91,13 +97,21 @@ export function transition<
         );
       }
 
-      if (!sources.includes(this.state)) {
-        throw new InvalidSourceStateError(methodName, this.state, sources);
-      }
-
-      const sourceState = this.state;
       const conditions = config.conditions ?? [];
-      const passedConditions = evaluateConditions(this, conditions);
+      let passedConditions: boolean | Promise<boolean>;
+
+      try {
+        passedConditions = evaluateConditions(this, conditions);
+      } catch (error) {
+        throw createTransitionExecutionError(
+          this,
+          methodName,
+          sourceState,
+          targetState,
+          errorState,
+          error,
+        );
+      }
 
       if (isPromiseLike(passedConditions)) {
         return runAsyncTransition({
@@ -252,27 +266,58 @@ function runAsyncTransition<
 
   return (async () => {
     try {
-      if (conditions !== undefined && !(await conditions)) {
-        throw new TransitionConditionFailedError(methodName);
+      if (conditions !== undefined) {
+        let passedConditions: boolean;
+
+        try {
+          passedConditions = await conditions;
+        } catch (error) {
+          throw createTransitionExecutionError(
+            machine,
+            methodName,
+            sourceState,
+            targetState,
+            errorState,
+            error,
+          );
+        }
+
+        if (!passedConditions) {
+          throw new TransitionConditionFailedError(methodName);
+        }
       }
 
-      const result =
-        bodyResult ??
-        executeBody?.() ??
-        (() => {
-          throw new TypeError("Async transition requires a transition body.");
-        })();
+      try {
+        const result =
+          bodyResult ??
+          executeBody?.() ??
+          (() => {
+            throw new TypeError("Async transition requires a transition body.");
+          })();
 
-      if (isPromiseLike(result)) {
-        const value = await result;
+        if (isPromiseLike(result)) {
+          const value = await result;
+          machine.state = targetState;
+          return value;
+        }
+
         machine.state = targetState;
-        return value;
+        return result;
+      } catch (error) {
+        throw createTransitionExecutionError(
+          machine,
+          methodName,
+          sourceState,
+          targetState,
+          errorState,
+          error,
+        );
       }
-
-      machine.state = targetState;
-      return result;
     } catch (error) {
-      if (error instanceof TransitionConditionFailedError) {
+      if (
+        error instanceof TransitionConditionFailedError ||
+        error instanceof TransitionExecutionError
+      ) {
         throw error;
       }
 
