@@ -25,6 +25,7 @@
     "prepack": "npm run build",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:coverage:ci": "vitest run --coverage --reporter=default --reporter=junit --outputFile=test-report.junit.xml",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
