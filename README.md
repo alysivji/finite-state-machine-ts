@@ -218,7 +218,7 @@ Use `SyncCondition<TMachine>` for extracted sync-only guards that should preserv
 interface TransitionConfig<
   S extends string,
   TMachine extends StateMachine<S> = StateMachine<S>,
-  TCondition extends Condition<TMachine> = Condition<TMachine>,
+  TCondition extends Condition<TMachine> = SyncCondition<TMachine>,
 > {
   source: S | readonly S[];
   target: S;

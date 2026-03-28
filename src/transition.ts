@@ -22,7 +22,7 @@ export interface TransitionDefinition<S extends string> {
 export interface TransitionConfig<
   S extends string,
   TMachine extends StateMachine<S> = StateMachine<S>,
-  TCondition extends Condition<TMachine> = Condition<TMachine>,
+  TCondition extends Condition<TMachine> = SyncCondition<TMachine>,
 > {
   source: S | readonly S[];
   target: S;
@@ -69,9 +69,7 @@ export function transition<
   TArgs extends unknown[] = unknown[],
   TResult extends Promise<unknown> = Promise<unknown>,
 >(
-  config: TransitionConfig<S, TMachine> & {
-    conditions: readonly Condition<TMachine>[];
-  },
+  config: TransitionConfig<S, TMachine, Condition<TMachine>>,
 ): <TActualArgs extends TArgs = TArgs, TActualResult extends TResult = TResult>(
   target: object,
   propertyKey: string | symbol,
@@ -82,7 +80,7 @@ export function transition<
   TransitionMethod<TMachine, TActualArgs, TActualResult>
 >;
 export function transition<S extends string, TMachine extends StateMachine<S>>(
-  config: TransitionConfig<S, TMachine>,
+  config: TransitionConfig<S, TMachine, Condition<TMachine>>,
 ) {
   const sources = Array.isArray(config.source)
     ? [...config.source]

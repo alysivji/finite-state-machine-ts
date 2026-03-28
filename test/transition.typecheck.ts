@@ -1,4 +1,10 @@
-import { StateMachine, type SyncCondition, transition } from "../src/index";
+import {
+  type Condition,
+  StateMachine,
+  type SyncCondition,
+  type TransitionConfig,
+  transition,
+} from "../src/index";
 
 type TypecheckState = "idle" | "done";
 type Assert<T extends true> = T;
@@ -23,6 +29,21 @@ class SyncGuardMachine extends StateMachine<TypecheckState> {
   finish() {}
 }
 
+const syncConfig: TransitionConfig<TypecheckState, SyncGuardMachine> = {
+  source: "idle",
+  target: "done",
+  conditions: [isAllowed],
+};
+
+class StoredSyncConfigMachine extends StateMachine<TypecheckState> {
+  constructor(initialState: TypecheckState = "idle") {
+    super(initialState);
+  }
+
+  @transition(syncConfig)
+  finish() {}
+}
+
 class AsyncGuardPromiseMachine extends StateMachine<TypecheckState> {
   constructor(initialState: TypecheckState = "idle") {
     super(initialState);
@@ -33,6 +54,25 @@ class AsyncGuardPromiseMachine extends StateMachine<TypecheckState> {
     target: "done",
     conditions: [async () => true],
   })
+  async finish() {}
+}
+
+const asyncConfig: TransitionConfig<
+  TypecheckState,
+  StoredAsyncConfigMachine,
+  Condition<StoredAsyncConfigMachine>
+> = {
+  source: "idle",
+  target: "done",
+  conditions: [async () => true],
+};
+
+class StoredAsyncConfigMachine extends StateMachine<TypecheckState> {
+  constructor(initialState: TypecheckState = "idle") {
+    super(initialState);
+  }
+
+  @transition(asyncConfig)
   async finish() {}
 }
 
@@ -53,6 +93,12 @@ class InvalidAsyncGuardMachine extends StateMachine<TypecheckState> {
 type _syncResult = Assert<
   IsExact<ReturnType<SyncGuardMachine["finish"]>, void>
 >;
+type _storedSyncConfigResult = Assert<
+  IsExact<ReturnType<StoredSyncConfigMachine["finish"]>, void>
+>;
 type _asyncResult = Assert<
   IsExact<ReturnType<AsyncGuardPromiseMachine["finish"]>, Promise<void>>
+>;
+type _storedAsyncConfigResult = Assert<
+  IsExact<ReturnType<StoredAsyncConfigMachine["finish"]>, Promise<void>>
 >;
