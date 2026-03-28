@@ -30,7 +30,16 @@ import {
   type SyncCondition,
 } from "finite-state-machine-ts";
 
-type PullRequestState = "draft" | "open" | "approved" | "merged" | "closed";
+const PullRequestState = {
+  Draft: "draft",
+  Open: "open",
+  Approved: "approved",
+  Merged: "merged",
+  Closed: "closed",
+} as const;
+
+type PullRequestState =
+  (typeof PullRequestState)[keyof typeof PullRequestState];
 
 const hasAtLeastOneApproval: SyncCondition<GithubPullRequest> = (machine) =>
   machine.approvals >= 1;
@@ -38,38 +47,40 @@ const hasAtLeastOneApproval: SyncCondition<GithubPullRequest> = (machine) =>
 class GithubPullRequest extends StateMachine<PullRequestState> {
   approvals = 0;
 
-  constructor(initialState: PullRequestState = "draft") {
-    super(initialState);
-  }
+  static initialState: PullRequestState = PullRequestState.Draft;
 
   @transition<PullRequestState, GithubPullRequest, [], void>({
-    source: "draft",
-    target: "open",
+    source: PullRequestState.Draft,
+    target: PullRequestState.Open,
   })
   readyForReview() {}
 
   @transition<PullRequestState, GithubPullRequest, [], void>({
-    source: "open",
-    target: "draft",
+    source: PullRequestState.Open,
+    target: PullRequestState.Draft,
   })
   convertToDraft() {}
 
   @transition<PullRequestState, GithubPullRequest, [], void>({
-    source: "open",
-    target: "approved",
+    source: PullRequestState.Open,
+    target: PullRequestState.Approved,
   })
   approve() {}
 
   @transition<PullRequestState, GithubPullRequest, [], void>({
-    source: "approved",
-    target: "merged",
+    source: PullRequestState.Approved,
+    target: PullRequestState.Merged,
     conditions: [hasAtLeastOneApproval],
   })
   merge() {}
 
   @transition<PullRequestState, GithubPullRequest, [], void>({
-    source: ["draft", "open", "approved"],
-    target: "closed",
+    source: [
+      PullRequestState.Draft,
+      PullRequestState.Open,
+      PullRequestState.Approved,
+    ],
+    target: PullRequestState.Closed,
   })
   close() {}
 }

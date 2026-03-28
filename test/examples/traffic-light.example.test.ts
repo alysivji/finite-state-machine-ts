@@ -9,9 +9,7 @@ import {
 type TrafficLightState = "red" | "green" | "yellow";
 
 class TrafficLight extends StateMachine<TrafficLightState> {
-  constructor(initialState: TrafficLightState = "red") {
-    super(initialState);
-  }
+  static initialState: TrafficLightState = "red";
 
   @transition<TrafficLightState, TrafficLight>({
     source: "red",

@@ -22,27 +22,30 @@ import {
   type SyncCondition,
 } from "finite-state-machine-ts";
 
-type LightState = "off" | "on";
+const LightState = {
+  Off: "off",
+  On: "on",
+} as const;
+
+type LightState = (typeof LightState)[keyof typeof LightState];
 
 const isPowered: SyncCondition<LightSwitch> = (machine) => machine.hasPower;
 
 class LightSwitch extends StateMachine<LightState> {
   hasPower = true;
 
-  constructor(initialState: LightState = "off") {
-    super(initialState);
-  }
+  static initialState: LightState = LightState.Off;
 
   @transition<LightState, LightSwitch, [], void>({
-    source: "off",
-    target: "on",
+    source: LightState.Off,
+    target: LightState.On,
     conditions: [isPowered],
   })
   switchOn() {}
 
   @transition<LightState, LightSwitch, [], void>({
-    source: "on",
-    target: "off",
+    source: LightState.On,
+    target: LightState.Off,
   })
   switchOff() {}
 }

@@ -13,11 +13,8 @@ type LightState = "off" | "on";
 const isPowered: SyncCondition<LightSwitch> = (machine) => machine.hasPower;
 
 class LightSwitch extends StateMachine<LightState> {
+  static initialState: LightState = "off";
   hasPower = true;
-
-  constructor(initialState: LightState = "off") {
-    super(initialState);
-  }
 
   @transition<LightState, LightSwitch>({
     source: "off",

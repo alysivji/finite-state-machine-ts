@@ -7,14 +7,27 @@ import {
   transition,
 } from "../src/index";
 
+enum EnumJobState {
+  Pending = "pending",
+  Completed = "completed",
+}
+
 class BarrelMachine extends StateMachine<"idle" | "done"> {
-  constructor(initialState: "idle" | "done" = "idle") {
-    super(initialState);
-  }
+  static initialState: "idle" | "done" = "idle";
 
   @transition<"idle" | "done", BarrelMachine>({
     source: "idle",
     target: "done",
+  })
+  finish() {}
+}
+
+class EnumMachine extends StateMachine<EnumJobState> {
+  static initialState = EnumJobState.Pending;
+
+  @transition<EnumJobState, EnumMachine>({
+    source: EnumJobState.Pending,
+    target: EnumJobState.Completed,
   })
   finish() {}
 }
@@ -31,8 +44,31 @@ describe("index barrel exports", () => {
     const machine = new indexModule.StateMachine<"idle" | "done">("idle");
 
     expect(machine.state).toBe("idle");
+    expect(new BarrelMachine().state).toBe("idle");
+    expect(new BarrelMachine("done").state).toBe("done");
     expect(
       generateStateDiagram(BarrelMachine, { initialState: "idle" }),
     ).toContain("stateDiagram-v2");
+  });
+
+  it("requires subclasses to declare an initial state when no explicit state is passed", () => {
+    class MissingInitialStateMachine extends StateMachine<"idle" | "done"> {}
+
+    expect(() => new MissingInitialStateMachine()).toThrow(
+      "State machine MissingInitialStateMachine requires an explicit state or a static initialState.",
+    );
+  });
+
+  it("supports string enum state types", () => {
+    const machine = new EnumMachine();
+
+    expect(machine.state).toBe(EnumJobState.Pending);
+
+    machine.finish();
+
+    expect(machine.state).toBe(EnumJobState.Completed);
+    expect(new EnumMachine(EnumJobState.Completed).state).toBe(
+      EnumJobState.Completed,
+    );
   });
 });

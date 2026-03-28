@@ -19,22 +19,25 @@ stateDiagram-v2
 ```ts
 import { StateMachine, transition } from "finite-state-machine-ts";
 
-type TurnstileState = "closed" | "open";
+const TurnstileState = {
+  Closed: "closed",
+  Open: "open",
+} as const;
+
+type TurnstileState = (typeof TurnstileState)[keyof typeof TurnstileState];
 
 class Turnstile extends StateMachine<TurnstileState> {
-  constructor(initialState: TurnstileState = "closed") {
-    super(initialState);
-  }
+  static initialState: TurnstileState = TurnstileState.Closed;
 
   @transition<TurnstileState, Turnstile, [], void>({
-    source: ["closed", "open"],
-    target: "open",
+    source: [TurnstileState.Closed, TurnstileState.Open],
+    target: TurnstileState.Open,
   })
   insertCoin() {}
 
   @transition<TurnstileState, Turnstile, [], void>({
-    source: "open",
-    target: "closed",
+    source: TurnstileState.Open,
+    target: TurnstileState.Closed,
   })
   passThrough() {}
 }

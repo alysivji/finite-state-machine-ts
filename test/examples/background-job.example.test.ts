@@ -10,11 +10,8 @@ import {
 type BackgroundJobState = "queued" | "running" | "completed" | "failed";
 
 class BackgroundJob extends StateMachine<BackgroundJobState> {
+  static initialState: BackgroundJobState = "queued";
   shouldFail = false;
-
-  constructor(initialState: BackgroundJobState = "queued") {
-    super(initialState);
-  }
 
   @transition<BackgroundJobState, BackgroundJob>({
     source: "queued",
@@ -42,7 +39,7 @@ class BackgroundJob extends StateMachine<BackgroundJobState> {
 
 describe("background job example", () => {
   it("runs the documented happy path", () => {
-    const job = new BackgroundJob("queued");
+    const job = new BackgroundJob();
 
     job.start();
     job.process();
@@ -51,7 +48,7 @@ describe("background job example", () => {
   });
 
   it("follows the documented error and retry path", () => {
-    const job = new BackgroundJob("queued");
+    const job = new BackgroundJob();
     job.start();
     job.shouldFail = true;
 
