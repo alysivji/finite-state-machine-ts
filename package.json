@@ -2,6 +2,12 @@
   "name": "finite-state-machine-ts",
   "version": "0.0.2",
   "type": "module",
+  "license": "MIT",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "bin": {
     "fsm-draw-state-diagram": "./dist/cli/fsm-draw-state-diagram.js"
   },
@@ -14,6 +20,8 @@
     "check": "biome check .",
     "format": "biome format --write .",
     "lint": "biome lint .",
+    "pack:check": "npm pack --dry-run",
+    "prepack": "npm run build",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit"
