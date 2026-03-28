@@ -15,3 +15,4 @@ Core sync/async transition semantics are covered separately by focused unit test
 - [Traffic Light](./traffic-light.md)
 - [Background Job](./background-job.md)
 - [GitHub Pull Request](./github-pull-request.md)
+- [Async Deployment](./async-deployment.md)

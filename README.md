@@ -85,6 +85,7 @@ The repo includes a small set of worked examples with Mermaid diagrams and annot
 - [Traffic Light](./docs/examples/traffic-light.md)
 - [Background Job](./docs/examples/background-job.md)
 - [GitHub Pull Request](./docs/examples/github-pull-request.md)
+- [Async Deployment](./docs/examples/async-deployment.md)
 
 ## How It Works
 
