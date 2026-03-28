@@ -85,18 +85,73 @@ The repo includes a small set of worked examples with Mermaid diagrams and annot
 - [Traffic Light](./docs/examples/traffic-light.md)
 - [Background Job](./docs/examples/background-job.md)
 - [GitHub Pull Request](./docs/examples/github-pull-request.md)
+- [Async Deployment](./docs/examples/async-deployment.md)
 
 ## How It Works
 
 The `@transition` decorator wraps a method and applies runtime checks in this order:
 
 1. Confirm `this.state` matches the configured `source`.
-2. Run every condition function, if provided.
-3. Execute the original method.
-4. If the method succeeds, set `this.state = target`.
-5. If the method throws or rejects, optionally set `this.state = onError` and throw a `TransitionExecutionError` with the original error attached as `cause`.
+2. Reject overlapping transitions on the same instance while async work is still pending.
+3. Run every condition function in declaration order.
+4. Execute the original method.
+5. If the method succeeds, set `this.state = target`.
+6. If a condition or method throws or rejects, optionally set `this.state = onError` and throw a `TransitionExecutionError` with the original error attached as `cause`.
 
 There is no central machine config or separate state graph. Transitions live where the behavior lives: on the methods that perform the work.
+
+Decorated methods stay synchronous when every condition and the method body are synchronous. If any condition is async, or the body returns a promise, the decorated method returns a promise instead.
+
+## Async Transitions
+
+Conditions and transition bodies can both be synchronous or asynchronous.
+
+```ts
+import {
+  ConcurrentTransitionError,
+  StateMachine,
+  transition,
+} from "finite-state-machine-ts";
+
+type DeploymentState = "pending" | "running" | "completed";
+
+class Deployment extends StateMachine<DeploymentState> {
+  constructor(initialState: DeploymentState = "pending") {
+    super(initialState);
+  }
+
+  @transition<DeploymentState, Deployment, [], Promise<string>>({
+    source: "pending",
+    target: "running",
+    conditions: [
+      async () => {
+        await Promise.resolve();
+        return true;
+      },
+    ],
+  })
+  async start() {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    return "started";
+  }
+}
+
+const deployment = new Deployment();
+const pending = deployment.start();
+
+console.log(deployment.state); // "pending"
+
+try {
+  deployment.start();
+} catch (error) {
+  console.error(error instanceof ConcurrentTransitionError); // true
+}
+
+await pending;
+console.log(deployment.state); // "running"
+```
+
+While an async condition or async body is pending, the machine stays in the source state and blocks other transitions on that same instance with `ConcurrentTransitionError`. Other machine instances are unaffected.
 
 ## Why Use This Instead of a Heavier FSM Library?
 
@@ -155,7 +210,7 @@ class StateMachine<S extends string> {
 
 ### `transition(config)`
 
-Decorator for transition methods. Decorated methods can be synchronous or asynchronous.
+Decorator for transition methods. Decorated methods can be synchronous or asynchronous, and conditions can return `boolean` or `Promise<boolean>`.
 
 ```ts
 interface TransitionConfig<
@@ -178,8 +233,9 @@ Returns Mermaid state diagram markdown for the transitions defined on the class.
 Transition failures use these exported error types:
 
 - `InvalidSourceStateError` when the current state is not in `source`.
-- `TransitionConditionFailedError` when any configured condition returns `false`.
-- `TransitionExecutionError` when the decorated method throws or rejects. The original error is available as `error.cause`.
+- `TransitionConditionFailedError` when any configured condition returns or resolves to `false`.
+- `TransitionExecutionError` when a condition or the decorated method throws or rejects. The original error is available as `error.cause`.
+- `ConcurrentTransitionError` when another async transition is already in progress on the same machine instance.
 
 ## Contributing
 

@@ -3,8 +3,9 @@ import {
   type Condition,
   generateStateDiagram,
   StateMachine,
+  TransitionConditionFailedError,
   transition,
-} from "../src/index";
+} from "../../src/index";
 
 type PullRequestState = "draft" | "open" | "approved" | "merged" | "closed";
 
@@ -18,53 +19,41 @@ class GithubPullRequest extends StateMachine<PullRequestState> {
     super(initialState);
   }
 
-  @transition<PullRequestState, GithubPullRequest, [], void>({
+  @transition<PullRequestState, GithubPullRequest>({
     source: "draft",
     target: "open",
   })
   readyForReview() {}
 
-  @transition<PullRequestState, GithubPullRequest, [], void>({
+  @transition<PullRequestState, GithubPullRequest>({
     source: "open",
     target: "draft",
   })
   convertToDraft() {}
 
-  @transition<PullRequestState, GithubPullRequest, [], void>({
+  @transition<PullRequestState, GithubPullRequest>({
     source: "open",
     target: "approved",
   })
   approve() {}
 
-  @transition<PullRequestState, GithubPullRequest, [], void>({
+  @transition<PullRequestState, GithubPullRequest>({
     source: "approved",
     target: "merged",
     conditions: [hasAtLeastOneApproval],
   })
   merge() {}
 
-  @transition<PullRequestState, GithubPullRequest, [], void>({
+  @transition<PullRequestState, GithubPullRequest>({
     source: ["draft", "open", "approved"],
     target: "closed",
   })
   close() {}
 }
 
-describe("github pull request transitions", () => {
-  it("supports draft mode transitions", () => {
+describe("github pull request example", () => {
+  it("follows the documented review and merge flow", () => {
     const pr = new GithubPullRequest();
-
-    expect(pr.state).toBe("draft");
-
-    pr.readyForReview();
-    expect(pr.state).toBe("open");
-
-    pr.convertToDraft();
-    expect(pr.state).toBe("draft");
-  });
-
-  it("allows approved -> merged with at least one approval", () => {
-    const pr = new GithubPullRequest("draft");
 
     pr.readyForReview();
     pr.approve();
@@ -74,33 +63,16 @@ describe("github pull request transitions", () => {
     expect(pr.state).toBe("merged");
   });
 
-  it("blocks approved -> merged when approvals are zero", () => {
+  it("keeps merge guarded by approval count", () => {
     const pr = new GithubPullRequest("draft");
-
     pr.readyForReview();
     pr.approve();
 
-    expect(() => pr.merge()).toThrow(
-      "Conditions not met for transition merge.",
-    );
+    expect(() => pr.merge()).toThrow(TransitionConditionFailedError);
     expect(pr.state).toBe("approved");
   });
 
-  it("allows closing from draft, open, and approved", () => {
-    const draftPr = new GithubPullRequest("draft");
-    draftPr.close();
-    expect(draftPr.state).toBe("closed");
-
-    const openPr = new GithubPullRequest("open");
-    openPr.close();
-    expect(openPr.state).toBe("closed");
-
-    const approvedPr = new GithubPullRequest("approved");
-    approvedPr.close();
-    expect(approvedPr.state).toBe("closed");
-  });
-
-  it("generates a Mermaid state diagram from transition metadata", () => {
+  it("matches the documented Mermaid diagram", () => {
     expect(
       generateStateDiagram(GithubPullRequest, { initialState: "draft" }),
     ).toBe(

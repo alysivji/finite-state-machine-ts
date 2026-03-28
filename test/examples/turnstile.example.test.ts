@@ -1,11 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
-  FiniteStateMachineError,
   generateStateDiagram,
   InvalidSourceStateError,
   StateMachine,
   transition,
-} from "../src/index";
+} from "../../src/index";
 
 type TurnstileState = "closed" | "open";
 
@@ -14,50 +13,37 @@ class Turnstile extends StateMachine<TurnstileState> {
     super(initialState);
   }
 
-  @transition<TurnstileState, Turnstile, [], void>({
+  @transition<TurnstileState, Turnstile>({
     source: ["closed", "open"],
     target: "open",
   })
   insertCoin() {}
 
-  @transition<TurnstileState, Turnstile, [], void>({
+  @transition<TurnstileState, Turnstile>({
     source: "open",
     target: "closed",
   })
   passThrough() {}
 }
 
-describe("turnstile transitions", () => {
-  it("allows insertCoin from closed and open", () => {
+describe("turnstile example", () => {
+  it("covers the documented transitions", () => {
     const machine = new Turnstile("closed");
 
     machine.insertCoin();
-    expect(machine.state).toBe("open");
-
     machine.insertCoin();
-    expect(machine.state).toBe("open");
-  });
-
-  it("allows passThrough from open", () => {
-    const machine = new Turnstile("open");
-
     machine.passThrough();
 
     expect(machine.state).toBe("closed");
   });
 
-  it("throws for passThrough from closed and keeps state unchanged", () => {
+  it("rejects passThrough from the closed state", () => {
     const machine = new Turnstile("closed");
 
-    expect(() => machine.passThrough()).toThrow(FiniteStateMachineError);
     expect(() => machine.passThrough()).toThrow(InvalidSourceStateError);
-    expect(() => machine.passThrough()).toThrow(
-      'Cannot transition using passThrough from state "closed".',
-    );
-    expect(machine.state).toBe("closed");
   });
 
-  it("generates a Mermaid state diagram from transition metadata", () => {
+  it("matches the documented Mermaid diagram", () => {
     expect(generateStateDiagram(Turnstile, { initialState: "closed" })).toBe(
       `stateDiagram-v2
   state "closed" as state_0

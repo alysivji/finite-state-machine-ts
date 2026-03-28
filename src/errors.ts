@@ -24,6 +24,22 @@ export class TransitionConditionFailedError extends FiniteStateMachineError {
   }
 }
 
+export class ConcurrentTransitionError<
+  S extends string,
+> extends FiniteStateMachineError {
+  override readonly name: string = "ConcurrentTransitionError";
+
+  constructor(
+    public readonly activeMethod: string,
+    public readonly attemptedMethod: string,
+    public readonly currentState: S,
+  ) {
+    super(
+      `Transition ${attemptedMethod} cannot start while ${activeMethod} is still in progress.`,
+    );
+  }
+}
+
 export class TransitionExecutionError<
   S extends string,
 > extends FiniteStateMachineError {
