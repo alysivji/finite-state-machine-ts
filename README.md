@@ -100,7 +100,7 @@ The `@transition` decorator wraps a method and applies runtime checks in this or
 
 There is no central machine config or separate state graph. Transitions live where the behavior lives: on the methods that perform the work.
 
-Decorated methods stay synchronous when every condition and the method body are synchronous. If any condition is async, or the body returns a promise, the decorated method returns a promise instead.
+Decorated methods stay synchronous when every condition and the method body are synchronous. If any condition is async, or the body returns a promise, the decorated method returns a promise instead, so async-guarded methods should be declared with a `Promise` return type.
 
 ## Async Transitions
 
@@ -191,7 +191,7 @@ stateDiagram-v2
 After building the package, use the bundled command:
 
 ```bash
-fsm-draw-state-diagram --class ./dist/examples/light-switch.js:LightSwitch --initial-state off
+fsm-draw-state-diagram --class ./dist/path/to/your-machine.js:YourStateMachine --initial-state off
 ```
 
 The `--class` argument matches the Python library's shape: `<module-path>:<export-name>`.
@@ -212,14 +212,17 @@ class StateMachine<S extends string> {
 
 Decorator for transition methods. Decorated methods can be synchronous or asynchronous, and conditions can return `boolean` or `Promise<boolean>`.
 
+Use `SyncCondition<TMachine>` for extracted sync-only guards that should preserve a synchronous transition signature. The broader `Condition<TMachine>` type allows async guards and should be paired with a promise-returning transition method.
+
 ```ts
 interface TransitionConfig<
   S extends string,
   TMachine extends StateMachine<S> = StateMachine<S>,
+  TCondition extends Condition<TMachine> = Condition<TMachine>,
 > {
   source: S | readonly S[];
   target: S;
-  conditions?: readonly Condition<TMachine>[];
+  conditions?: readonly TCondition[];
   onError?: S;
 }
 ```

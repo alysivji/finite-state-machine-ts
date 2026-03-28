@@ -9,7 +9,9 @@ export {
 } from "./errors.js";
 export { StateMachine } from "./state-machine.js";
 export type {
+  AsyncCondition,
   Condition,
+  SyncCondition,
   TransitionConfig,
   TransitionDefinition,
 } from "./transition.js";

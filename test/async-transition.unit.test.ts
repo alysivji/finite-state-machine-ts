@@ -36,7 +36,7 @@ class AsyncConditionMachine extends StateMachine<AsyncState> {
     super(initialState);
   }
 
-  @transition<AsyncState, AsyncConditionMachine, [], string>({
+  @transition<AsyncState, AsyncConditionMachine, [], Promise<string>>({
     source: "idle",
     target: "running",
     onError: "failed",
@@ -57,7 +57,7 @@ class AsyncConditionMachine extends StateMachine<AsyncState> {
       },
     ],
   })
-  start() {
+  async start() {
     this.events.push("body");
     return "started";
   }
@@ -111,7 +111,7 @@ class AsyncTransitionConditionErrorMachine extends StateMachine<AsyncState> {
       () => Promise.reject(new TransitionConditionFailedError("inner")),
     ],
   })
-  start() {}
+  async start() {}
 }
 
 class AsyncTransitionBodyErrorMachine extends StateMachine<AsyncState> {
@@ -149,7 +149,7 @@ class AsyncGuardSyncVoidBodyMachine extends StateMachine<AsyncState> {
       },
     ],
   })
-  start() {
+  async start() {
     this.events.push("body");
   }
 }
@@ -186,7 +186,7 @@ class MultiAsyncConditionMachine extends StateMachine<AsyncState> {
       },
     ],
   })
-  start() {}
+  async start() {}
 }
 
 describe("async transition unit semantics", () => {

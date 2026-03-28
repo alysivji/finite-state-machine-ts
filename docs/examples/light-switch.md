@@ -19,12 +19,12 @@ stateDiagram-v2
 import {
   StateMachine,
   transition,
-  type Condition,
+  type SyncCondition,
 } from "finite-state-machine-ts";
 
 type LightState = "off" | "on";
 
-const isPowered: Condition<LightSwitch> = (machine) => machine.hasPower;
+const isPowered: SyncCondition<LightSwitch> = (machine) => machine.hasPower;
 
 class LightSwitch extends StateMachine<LightState> {
   hasPower = true;

@@ -27,12 +27,12 @@ stateDiagram-v2
 import {
   StateMachine,
   transition,
-  type Condition,
+  type SyncCondition,
 } from "finite-state-machine-ts";
 
 type PullRequestState = "draft" | "open" | "approved" | "merged" | "closed";
 
-const hasAtLeastOneApproval: Condition<GithubPullRequest> = (machine) =>
+const hasAtLeastOneApproval: SyncCondition<GithubPullRequest> = (machine) =>
   machine.approvals >= 1;
 
 class GithubPullRequest extends StateMachine<PullRequestState> {
