@@ -37,6 +37,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build
+        run: npm run build
+
+      - name: Typecheck
+        run: npm run typecheck
+
       - name: Test
         run: npm test
 
@@ -54,7 +60,7 @@ jobs:
             exit 1
           fi
 
-          if git ls-remote --exit-code --tags origin "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+          if git ls-remote --exit-code --tags origin "refs/tags/${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
             echo "Tag ${{ steps.version.outputs.tag }} already exists on origin."
             exit 1
           fi
@@ -67,7 +73,14 @@ jobs:
           git push origin "${{ steps.version.outputs.tag }}"
 
       - name: Publish package to npm
-        run: npm publish
+        run: npm publish --ignore-scripts
+
+      - name: Clean up tag if publish fails
+        if: failure()
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+            git push --delete origin "${{ steps.version.outputs.tag }}"
+          fi
 
       - name: Create GitHub release
         env:
