@@ -22,22 +22,30 @@ stateDiagram-v2
 ```ts
 import { StateMachine, transition } from "finite-state-machine-ts";
 
-type BackgroundJobState = "queued" | "running" | "completed" | "failed";
+const BackgroundJobState = {
+  Queued: "queued",
+  Running: "running",
+  Completed: "completed",
+  Failed: "failed",
+} as const;
+
+type BackgroundJobState =
+  (typeof BackgroundJobState)[keyof typeof BackgroundJobState];
 
 class BackgroundJob extends StateMachine<BackgroundJobState> {
-  static initialState: BackgroundJobState = "queued";
+  static initialState: BackgroundJobState = BackgroundJobState.Queued;
   shouldFail = false;
 
   @transition<BackgroundJobState, BackgroundJob, [], void>({
-    source: "queued",
-    target: "running",
+    source: BackgroundJobState.Queued,
+    target: BackgroundJobState.Running,
   })
   start() {}
 
   @transition<BackgroundJobState, BackgroundJob, [], void>({
-    source: "running",
-    target: "completed",
-    onError: "failed",
+    source: BackgroundJobState.Running,
+    target: BackgroundJobState.Completed,
+    onError: BackgroundJobState.Failed,
   })
   process() {
     if (this.shouldFail) {
@@ -46,8 +54,8 @@ class BackgroundJob extends StateMachine<BackgroundJobState> {
   }
 
   @transition<BackgroundJobState, BackgroundJob, [], void>({
-    source: "failed",
-    target: "queued",
+    source: BackgroundJobState.Failed,
+    target: BackgroundJobState.Queued,
   })
   retry() {}
 }

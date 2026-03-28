@@ -25,17 +25,24 @@ import {
   transition,
 } from "finite-state-machine-ts";
 
-type DeploymentState = "pending" | "running" | "completed" | "failed";
+const DeploymentState = {
+  Pending: "pending",
+  Running: "running",
+  Completed: "completed",
+  Failed: "failed",
+} as const;
+
+type DeploymentState = (typeof DeploymentState)[keyof typeof DeploymentState];
 
 class AsyncDeployment extends StateMachine<DeploymentState> {
   capacityAvailable = true;
 
-  static initialState: DeploymentState = "pending";
+  static initialState: DeploymentState = DeploymentState.Pending;
 
   @transition<DeploymentState, AsyncDeployment, [], Promise<string>>({
-    source: "pending",
-    target: "running",
-    onError: "failed",
+    source: DeploymentState.Pending,
+    target: DeploymentState.Running,
+    onError: DeploymentState.Failed,
     conditions: [
       async (machine) => {
         await Promise.resolve();
@@ -49,8 +56,8 @@ class AsyncDeployment extends StateMachine<DeploymentState> {
   }
 
   @transition<DeploymentState, AsyncDeployment, [], Promise<void>>({
-    source: "running",
-    target: "completed",
+    source: DeploymentState.Running,
+    target: DeploymentState.Completed,
   })
   async complete() {
     await Promise.resolve();

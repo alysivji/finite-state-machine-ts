@@ -20,26 +20,33 @@ stateDiagram-v2
 ```ts
 import { StateMachine, transition } from "finite-state-machine-ts";
 
-type TrafficLightState = "red" | "green" | "yellow";
+const TrafficLightState = {
+  Red: "red",
+  Green: "green",
+  Yellow: "yellow",
+} as const;
+
+type TrafficLightState =
+  (typeof TrafficLightState)[keyof typeof TrafficLightState];
 
 class TrafficLight extends StateMachine<TrafficLightState> {
-  static initialState: TrafficLightState = "red";
+  static initialState: TrafficLightState = TrafficLightState.Red;
 
   @transition<TrafficLightState, TrafficLight, [], void>({
-    source: "red",
-    target: "green",
+    source: TrafficLightState.Red,
+    target: TrafficLightState.Green,
   })
   goGreen() {}
 
   @transition<TrafficLightState, TrafficLight, [], void>({
-    source: "green",
-    target: "yellow",
+    source: TrafficLightState.Green,
+    target: TrafficLightState.Yellow,
   })
   goYellow() {}
 
   @transition<TrafficLightState, TrafficLight, [], void>({
-    source: "yellow",
-    target: "red",
+    source: TrafficLightState.Yellow,
+    target: TrafficLightState.Red,
   })
   goRed() {}
 }

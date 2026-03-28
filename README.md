@@ -23,22 +23,30 @@ Make sure your `tsconfig.json` enables decorators:
 ```ts
 import { StateMachine, transition } from "finite-state-machine-ts";
 
-type BackgroundJobState = "queued" | "running" | "completed" | "failed";
+const BackgroundJobState = {
+  Queued: "queued",
+  Running: "running",
+  Completed: "completed",
+  Failed: "failed",
+} as const;
+
+type BackgroundJobState =
+  (typeof BackgroundJobState)[keyof typeof BackgroundJobState];
 
 class BackgroundJob extends StateMachine<BackgroundJobState> {
-  static initialState: BackgroundJobState = "queued";
+  static initialState: BackgroundJobState = BackgroundJobState.Queued;
   shouldFail = false;
 
   @transition<BackgroundJobState, BackgroundJob, [], void>({
-    source: "queued",
-    target: "running",
+    source: BackgroundJobState.Queued,
+    target: BackgroundJobState.Running,
   })
   start() {}
 
   @transition<BackgroundJobState, BackgroundJob, [], void>({
-    source: "running",
-    target: "completed",
-    onError: "failed",
+    source: BackgroundJobState.Running,
+    target: BackgroundJobState.Completed,
+    onError: BackgroundJobState.Failed,
   })
   process() {
     if (this.shouldFail) {
@@ -47,8 +55,8 @@ class BackgroundJob extends StateMachine<BackgroundJobState> {
   }
 
   @transition<BackgroundJobState, BackgroundJob, [], void>({
-    source: "failed",
-    target: "queued",
+    source: BackgroundJobState.Failed,
+    target: BackgroundJobState.Queued,
   })
   retry() {}
 }
@@ -72,7 +80,49 @@ try {
 }
 ```
 
-`new Machine()` starts from `static initialState`. Passing a state still restores a persisted machine from any valid state: `new BackgroundJob("failed")`.
+`new Machine()` starts from `static initialState`. Passing a state still restores a persisted machine from any valid state: `new BackgroundJob(BackgroundJobState.Failed)`.
+
+## Defining States
+
+This library works with string-valued states. You can define them in whatever TypeScript style fits your codebase:
+
+### Preferred: `as const` object
+
+The examples in this repo use an `as const` object because it gives you named state values while staying close to plain TypeScript objects.
+
+```ts
+const JobState = {
+  Queued: "queued",
+  Running: "running",
+  Completed: "completed",
+  Failed: "failed",
+} as const;
+
+type JobState = (typeof JobState)[keyof typeof JobState];
+```
+
+### String union
+
+This is the smallest option and works well if you do not need named constants.
+
+```ts
+type JobState = "queued" | "running" | "completed" | "failed";
+```
+
+### String enum
+
+This keeps the state set explicit and centralized if your codebase prefers enums.
+
+```ts
+enum JobState {
+  Queued = "queued",
+  Running = "running",
+  Completed = "completed",
+  Failed = "failed",
+}
+```
+
+All three approaches are supported. Pick the one that matches your team's TypeScript style.
 
 ## Example Docs
 
@@ -112,14 +162,20 @@ import {
   transition,
 } from "finite-state-machine-ts";
 
-type DeploymentState = "pending" | "running" | "completed";
+const DeploymentState = {
+  Pending: "pending",
+  Running: "running",
+  Completed: "completed",
+} as const;
+
+type DeploymentState = (typeof DeploymentState)[keyof typeof DeploymentState];
 
 class Deployment extends StateMachine<DeploymentState> {
-  static initialState: DeploymentState = "pending";
+  static initialState: DeploymentState = DeploymentState.Pending;
 
   @transition<DeploymentState, Deployment, [], Promise<string>>({
-    source: "pending",
-    target: "running",
+    source: DeploymentState.Pending,
+    target: DeploymentState.Running,
     conditions: [
       async () => {
         await Promise.resolve();
