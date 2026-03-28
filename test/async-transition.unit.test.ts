@@ -154,6 +154,41 @@ class AsyncGuardSyncVoidBodyMachine extends StateMachine<AsyncState> {
   }
 }
 
+class MultiAsyncConditionMachine extends StateMachine<AsyncState> {
+  firstGate = createDeferred<boolean>();
+  secondGate = createDeferred<boolean>();
+  allowLateCondition = true;
+  events: string[] = [];
+
+  constructor(initialState: AsyncState = "idle") {
+    super(initialState);
+  }
+
+  @transition<AsyncState, MultiAsyncConditionMachine>({
+    source: "idle",
+    target: "running",
+    conditions: [
+      async (machine) => {
+        machine.events.push("first:start");
+        const allowed = await machine.firstGate.promise;
+        machine.events.push("first:end");
+        return allowed;
+      },
+      async (machine) => {
+        machine.events.push("second:start");
+        const allowed = await machine.secondGate.promise;
+        machine.events.push("second:end");
+        return allowed;
+      },
+      (machine) => {
+        machine.events.push("late-sync");
+        return machine.allowLateCondition;
+      },
+    ],
+  })
+  start() {}
+}
+
 describe("async transition unit semantics", () => {
   it("returns a promise when any condition is async and keeps state unchanged until completion", async () => {
     const machine = new AsyncConditionMachine("idle");
@@ -248,6 +283,46 @@ describe("async transition unit semantics", () => {
       "async-condition:start",
       "async-condition:end",
       "body",
+    ]);
+  });
+
+  it("continues through later async conditions before failing on a final sync condition", async () => {
+    const machine = new MultiAsyncConditionMachine("idle");
+
+    const result = machine.start();
+    machine.firstGate.resolve(true);
+    await Promise.resolve();
+
+    machine.allowLateCondition = false;
+    machine.secondGate.resolve(true);
+
+    await expect(result).rejects.toThrow(TransitionConditionFailedError);
+    expect(machine.state).toBe("idle");
+    expect(machine.events).toEqual([
+      "first:start",
+      "first:end",
+      "second:start",
+      "second:end",
+      "late-sync",
+    ]);
+  });
+
+  it("stops when a later async condition resolves false", async () => {
+    const machine = new MultiAsyncConditionMachine("idle");
+
+    const result = machine.start();
+    machine.firstGate.resolve(true);
+    await Promise.resolve();
+
+    machine.secondGate.resolve(false);
+
+    await expect(result).rejects.toThrow(TransitionConditionFailedError);
+    expect(machine.state).toBe("idle");
+    expect(machine.events).toEqual([
+      "first:start",
+      "first:end",
+      "second:start",
+      "second:end",
     ]);
   });
 

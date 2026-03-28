@@ -85,7 +85,32 @@ class NoOnErrorMachine extends StateMachine<"idle" | "done"> {
   }
 }
 
+class QuotedStateMachine extends StateMachine<'say "hi"' | "done"> {
+  constructor(initialState: 'say "hi"' | "done" = 'say "hi"') {
+    super(initialState);
+  }
+
+  @transition<'say "hi"' | "done", QuotedStateMachine>({
+    source: 'say "hi"',
+    target: "done",
+  })
+  finish() {}
+}
+
 describe("transition unit semantics", () => {
+  it("rejects applying the transition decorator to a non-method descriptor", () => {
+    const decorate = transition<"idle" | "done", StateMachine<"idle" | "done">>(
+      {
+        source: "idle",
+        target: "done",
+      },
+    );
+
+    expect(() =>
+      decorate({}, "notAMethod", {} as TypedPropertyDescriptor<() => void>),
+    ).toThrow("@transition can only be applied to methods.");
+  });
+
   it("updates state immediately and preserves plain sync return values", () => {
     const machine = new SyncMachine("idle");
 
@@ -198,5 +223,75 @@ describe("transition unit semantics", () => {
   state_1 --> state_3: explode (error)
 `,
     );
+  });
+
+  it("builds diagrams without an explicit initial state and escapes quoted labels", () => {
+    expect(generateStateDiagram(QuotedStateMachine)).toBe(`stateDiagram-v2
+  state "say \\"hi\\"" as state_0
+  state "done" as state_1
+  state_0 --> state_1: finish
+`);
+  });
+
+  it("treats explicitly undefined transition metadata as empty", () => {
+    const transitionDefinitionsSymbol = Symbol.for(
+      "finite-state-machine-ts.transition-definitions",
+    );
+
+    class MissingMetadataMachine extends StateMachine<"idle" | "done"> {
+      constructor(initialState: "idle" | "done" = "idle") {
+        super(initialState);
+      }
+    }
+
+    Object.defineProperty(
+      MissingMetadataMachine.prototype,
+      transitionDefinitionsSymbol,
+      {
+        configurable: true,
+        value: undefined,
+        writable: true,
+      },
+    );
+
+    expect(getTransitionDefinitions(MissingMetadataMachine)).toEqual([]);
+  });
+
+  it("appends transition metadata when an own metadata slot is present but undefined", () => {
+    const transitionDefinitionsSymbol = Symbol.for(
+      "finite-state-machine-ts.transition-definitions",
+    );
+
+    class UndefinedMetadataBase extends StateMachine<"idle" | "done"> {
+      constructor(initialState: "idle" | "done" = "idle") {
+        super(initialState);
+      }
+    }
+
+    Object.defineProperty(
+      UndefinedMetadataBase.prototype,
+      transitionDefinitionsSymbol,
+      {
+        configurable: true,
+        value: undefined,
+        writable: true,
+      },
+    );
+
+    class UndefinedMetadataMachine extends UndefinedMetadataBase {
+      @transition<"idle" | "done", UndefinedMetadataMachine>({
+        source: "idle",
+        target: "done",
+      })
+      finish() {}
+    }
+
+    expect(getTransitionDefinitions(UndefinedMetadataMachine)).toEqual([
+      {
+        method: "finish",
+        source: ["idle"],
+        target: "done",
+      },
+    ]);
   });
 });

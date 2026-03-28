@@ -34,11 +34,25 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Upload bundle analysis to Codecov
+        if: ${{ always() && !cancelled() && matrix.node == '24' }}
+        env:
+          BUNDLE_ANALYZER_UPLOAD_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: npm run codecov:bundle-analysis
+
       - name: Test
-        run: npm run test:coverage
+        run: ${{ matrix.node == '24' && 'npm run test:coverage:ci' || 'npm run test:coverage' }}
 
       - name: Upload coverage reports to Codecov
-        if: matrix.node == '24'
+        if: ${{ always() && !cancelled() && matrix.node == '24' }}
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload test results to Codecov
+        if: ${{ always() && !cancelled() && matrix.node == '24' }}
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          report_type: test_results
+          files: test-report.junit.xml
