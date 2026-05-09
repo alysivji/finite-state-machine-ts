@@ -1,27 +1,20 @@
 # finite-state-machine-ts
 
-Readable finite state machines for TypeScript using decorators and normal class
-methods.
+Readable finite state machines for TypeScript using decorators and normal class methods.
 
-This file is a compact guide for AI coding assistants and other tools that need
-to use `finite-state-machine-ts` correctly.
+This file is a compact guide for AI coding assistants and other tools that need to use `finite-state-machine-ts` correctly.
 
-> Repository contributors: see AGENTS.md for repository and development
-> guidance.
+> Repository contributors: see AGENTS.md for repository and development guidance.
 
 ## Core rules
 
 - Use string-valued states only.
 - Subclass `StateMachine<S extends string>`.
-- Set `static initialState` for new machine instances, or pass an explicit state
-  to the constructor when restoring persisted state.
+- Set `static initialState` for new machine instances, or pass an explicit state to the constructor when restoring persisted state.
 - Put transition behavior on decorated methods with `@transition(...)`.
-- Use `source`, `target`, optional `conditions`, and optional `onError` to
-  describe allowed state changes.
-- Use `generateStateDiagram(...)` or `fsm-draw-state-diagram` to derive Mermaid
-  diagrams from declared transitions.
-- Do not expect a separate central machine configuration API. The methods are
-  the machine.
+- Use `source`, `target`, optional `conditions`, and optional `onError` to describe allowed state changes.
+- Use `generateStateDiagram(...)` or `fsm-draw-state-diagram` to derive Mermaid diagrams from declared transitions.
+- Do not expect a separate central machine configuration API. The methods are the machine.
 
 ## Canonical state definition
 
@@ -84,8 +77,7 @@ freshJob.start();
 
 ## Conditions and async transitions
 
-Conditions receive the machine instance and can return `boolean` or
-`Promise<boolean>`.
+Conditions receive the machine instance and can return `boolean` or `Promise<boolean>`.
 
 ```ts
 import { StateMachine, transition } from "finite-state-machine-ts";
@@ -131,7 +123,5 @@ The `--class` argument format is `<module-path>:<export-name>`.
 - Do not forget `"experimentalDecorators": true` in `tsconfig.json`.
 - Do not use number, symbol, or object state values.
 - Do not assume async transitions update `state` before the promise resolves.
-- Do not mutate `state` manually during normal transitions; use decorated
-  methods. Passing a constructor state for restore/init flows is fine.
-- Do not expect a central machine config object or statechart DSL in this
-  library.
+- Do not mutate `state` manually during normal transitions; use decorated methods. Passing a constructor state for restore/init flows is fine.
+- Do not expect a central machine config object or statechart DSL in this library.

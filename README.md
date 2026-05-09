@@ -309,8 +309,7 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for local setup and contribution guidel
 
 ## AI and Tooling Notes
 
-For AI coding assistants and other tools using the published package, see
-[llms.txt](./llms.txt).
+For AI coding assistants and other tools using the published package, see [llms.txt](./llms.txt).
 
 For repository-specific contributor guidance, see [AGENTS.md](./AGENTS.md).
 
