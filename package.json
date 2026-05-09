@@ -13,6 +13,7 @@
   "homepage": "https://github.com/alysivji/finite-state-machine-ts#readme",
   "files": [
     "dist",
+    "llms.txt",
     "README.md",
     "LICENSE"
   ],

@@ -1,0 +1,137 @@
+# finite-state-machine-ts
+
+Readable finite state machines for TypeScript using decorators and normal class
+methods.
+
+This file is a compact guide for AI coding assistants and other tools that need
+to use `finite-state-machine-ts` correctly.
+
+> Repository contributors: see AGENTS.md for repository and development
+> guidance.
+
+## Core rules
+
+- Use string-valued states only.
+- Subclass `StateMachine<S extends string>`.
+- Set `static initialState` for new machine instances, or pass an explicit state
+  to the constructor when restoring persisted state.
+- Put transition behavior on decorated methods with `@transition(...)`.
+- Use `source`, `target`, optional `conditions`, and optional `onError` to
+  describe allowed state changes.
+- Use `generateStateDiagram(...)` or `fsm-draw-state-diagram` to derive Mermaid
+  diagrams from declared transitions.
+- Do not expect a separate central machine configuration API. The methods are
+  the machine.
+
+## Canonical state definition
+
+Prefer an `as const` object when you want named values:
+
+```ts
+const JobState = {
+  Queued: "queued",
+  Running: "running",
+  Completed: "completed",
+  Failed: "failed",
+} as const;
+
+type JobState = (typeof JobState)[keyof typeof JobState];
+```
+
+String unions and string enums also work, but state values must be strings.
+
+## Canonical usage
+
+```ts
+import { StateMachine, transition } from "finite-state-machine-ts";
+
+const JobState = {
+  Queued: "queued",
+  Running: "running",
+  Completed: "completed",
+  Failed: "failed",
+} as const;
+
+type JobState = (typeof JobState)[keyof typeof JobState];
+
+class BackgroundJob extends StateMachine<JobState> {
+  static initialState: JobState = JobState.Queued;
+  shouldFail = false;
+
+  @transition<JobState, BackgroundJob, [], void>({
+    source: JobState.Queued,
+    target: JobState.Running,
+  })
+  start() {}
+
+  @transition<JobState, BackgroundJob, [], void>({
+    source: JobState.Running,
+    target: JobState.Completed,
+    onError: JobState.Failed,
+  })
+  process() {
+    if (this.shouldFail) {
+      throw new Error("job failed");
+    }
+  }
+}
+
+const freshJob = new BackgroundJob();
+const restoredJob = new BackgroundJob(JobState.Failed);
+
+freshJob.start();
+```
+
+## Conditions and async transitions
+
+Conditions receive the machine instance and can return `boolean` or
+`Promise<boolean>`.
+
+```ts
+import { StateMachine, transition } from "finite-state-machine-ts";
+
+class Deployment extends StateMachine<"pending" | "running"> {
+  static initialState: "pending" | "running" = "pending";
+
+  @transition<"pending" | "running", Deployment, [], Promise<void>>({
+    source: "pending",
+    target: "running",
+    conditions: [async () => true],
+  })
+  async start() {
+    await Promise.resolve();
+  }
+}
+```
+
+Async transitions do not update `state` until the async work finishes.
+
+## Diagram generation
+
+Programmatic usage:
+
+```ts
+import { generateStateDiagram } from "finite-state-machine-ts";
+
+const diagram = generateStateDiagram(BackgroundJob, {
+  initialState: JobState.Queued,
+});
+```
+
+CLI usage after building the package:
+
+```bash
+fsm-draw-state-diagram --class ./dist/path/to/machine.js:BackgroundJob --initial-state queued
+```
+
+The `--class` argument format is `<module-path>:<export-name>`.
+
+## Common mistakes to avoid
+
+- Do not forget `"experimentalDecorators": true` in `tsconfig.json`.
+- Do not use number, symbol, or object state values.
+- Do not assume async transitions update `state` before the promise resolves.
+- Do not mutate `state` manually during normal transitions; use decorated
+  methods. Passing a constructor state for restore/init flows is fine.
+- Do not expect a central machine config object or statechart DSL in this
+  library.

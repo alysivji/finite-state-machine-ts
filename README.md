@@ -307,6 +307,13 @@ Transition failures use these exported error types:
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for local setup and contribution guidelines.
 
+## AI and Tooling Notes
+
+For AI coding assistants and other tools using the published package, see
+[llms.txt](./llms.txt).
+
+For repository-specific contributor guidance, see [AGENTS.md](./AGENTS.md).
+
 ## Inspiration
 
 - [django-fsm](https://github.com/viewflow/django-fsm)
