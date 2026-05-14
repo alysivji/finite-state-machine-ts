@@ -1,8 +1,5 @@
 import { defineConfig } from "vitepress";
 
-// Replace this with the production docs URL if the Vercel project uses a different domain.
-const siteUrl = "https://finite-state-machine-ts.vercel.app";
-
 export default defineConfig({
   title: "finite-state-machine-ts",
   description:
@@ -21,9 +18,6 @@ export default defineConfig({
       },
     ],
   ],
-  sitemap: {
-    hostname: siteUrl,
-  },
   themeConfig: {
     search: {
       provider: "local",

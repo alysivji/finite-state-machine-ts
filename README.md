@@ -8,7 +8,7 @@
 
 `finite-state-machine-ts` is a lightweight, decorator-based finite state machine for TypeScript. Define transitions directly on class methods, keep state on the instance, and let runtime validation enforce allowed state changes.
 
-The full documentation now lives in `docs/` for local development and Vercel deployment. Start with:
+The full documentation now lives in `docs/` for local development and static hosting. Start with:
 
 - [Getting Started](./docs/getting-started.md)
 - [Transitions and Runtime Semantics](./docs/transitions-and-runtime.md)
