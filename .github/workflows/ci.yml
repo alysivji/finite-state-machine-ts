@@ -38,6 +38,10 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Build docs
+        if: ${{ matrix.node == '24' }}
+        run: npm run docs:build
+
       - name: Upload bundle analysis to Codecov
         if: ${{ always() && !cancelled() && matrix.node == '24' }}
         env:

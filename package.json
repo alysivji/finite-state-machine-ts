@@ -28,6 +28,10 @@
     "build": "tsc",
     "check": "biome check .",
     "codecov:bundle-analysis": "node scripts/codecov-bundle-analysis.mjs",
+    "docs:build": "vitepress build docs",
+    "docs:dev": "vitepress dev docs",
+    "docs:preview": "vitepress preview docs",
+    "docs:validate": "npm run docs:build",
     "format": "biome format --write .",
     "lint": "biome lint .",
     "pack:check": "npm pack --dry-run",
@@ -44,6 +48,7 @@
     "@types/node": "^24.6.1",
     "@vitest/coverage-v8": "^4.1.2",
     "typescript": "^6.0.2",
+    "vitepress": "^1.6.4",
     "vitest": "^4.1.2"
   }
 }

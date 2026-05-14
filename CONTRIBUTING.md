@@ -26,6 +26,10 @@ make build
 make test-coverage
 make typecheck
 make pre-commit
+npm run docs:dev
+npm run docs:build
+npm run docs:preview
+npm run docs:validate
 ```
 
 The pre-commit hook normalizes trailing whitespace, final newlines, and LF endings, validates YAML, and then runs formatting, linting, plus `tsc --noEmit` before a commit is created. Tests stay in the regular CI workflow instead of the commit hook.
@@ -34,13 +38,14 @@ The pre-commit hook normalizes trailing whitespace, final newlines, and LF endin
 
 - The library source lives in `src/`.
 - Tests live in `test/`.
-- Example documentation lives in `docs/examples/`.
+- User-facing docs live in `docs/`.
+- Example pages under `docs/examples/` are backed by the example test suite and should stay aligned.
 
 ## Pull Requests
 
 - Keep changes focused and reviewable.
 - Add or update tests for behavior changes.
-- Update docs or examples for user-facing changes.
+- Update the README and relevant docs pages for user-facing changes.
 - Call out public API changes, semver impact, and breaking changes in the PR description.
 
 Maintainers may use coding agents to help draft changes or documentation. All contributions are still expected to meet the same review, testing, and documentation standards.

@@ -8,6 +8,14 @@
 
 `finite-state-machine-ts` is a lightweight, decorator-based finite state machine for TypeScript. Define transitions directly on class methods, keep state on the instance, and let runtime validation enforce allowed state changes.
 
+The full documentation now lives in `docs/` for local development and Vercel deployment. Start with:
+
+- [Getting Started](./docs/getting-started.md)
+- [Transitions and Runtime Semantics](./docs/transitions-and-runtime.md)
+- [State Diagrams](./docs/diagrams.md)
+- [Examples](./docs/examples/index.md)
+- [For AI Agents](./docs/for-ai-agents.md)
+
 ## Installation
 
 ```bash
@@ -23,8 +31,6 @@ Make sure your `tsconfig.json` enables decorators:
   }
 }
 ```
-
-This library is tested with TypeScript `5.0.4`, `5.9.3`, and `6.0.2`.
 
 ## Basic Usage
 
@@ -90,172 +96,12 @@ try {
 
 `new Machine()` starts from `static initialState`. Passing a state still restores a persisted machine from any valid state: `new BackgroundJob(BackgroundJobState.Failed)`.
 
-## Defining States
+## Highlights
 
-This library works with string-valued states. You can define them in whatever TypeScript style fits your codebase:
-
-### Preferred: `as const` object
-
-The examples in this repo use an `as const` object because it gives you named state values while staying close to plain TypeScript objects.
-
-```ts
-const JobState = {
-  Queued: "queued",
-  Running: "running",
-  Completed: "completed",
-  Failed: "failed",
-} as const;
-
-type JobState = (typeof JobState)[keyof typeof JobState];
-```
-
-### String union
-
-This is the smallest option and works well if you do not need named constants.
-
-```ts
-type JobState = "queued" | "running" | "completed" | "failed";
-```
-
-### String enum
-
-This keeps the state set explicit and centralized if your codebase prefers enums.
-
-```ts
-enum JobState {
-  Queued = "queued",
-  Running = "running",
-  Completed = "completed",
-  Failed = "failed",
-}
-```
-
-All three approaches are supported. Pick the one that matches your team's TypeScript style.
-
-## Example Docs
-
-The repo includes a small set of worked examples with Mermaid diagrams and annotated code:
-
-- [Examples index](./docs/examples/README.md)
-- [Turnstile](./docs/examples/turnstile.md)
-- [Light Switch](./docs/examples/light-switch.md)
-- [Traffic Light](./docs/examples/traffic-light.md)
-- [Background Job](./docs/examples/background-job.md)
-- [GitHub Pull Request](./docs/examples/github-pull-request.md)
-- [Async Deployment](./docs/examples/async-deployment.md)
-
-## How It Works
-
-The `@transition` decorator wraps a method and applies runtime checks in this order:
-
-1. Confirm `this.state` matches the configured `source`.
-2. Reject overlapping transitions on the same instance while async work is still pending.
-3. Run every condition function in declaration order.
-4. Execute the original method.
-5. If the method succeeds, set `this.state = target`.
-6. If a condition or method throws or rejects, optionally set `this.state = onError` and throw a `TransitionExecutionError` with the original error attached as `cause`.
-
-There is no central machine config or separate state graph. Transitions live where the behavior lives: on the methods that perform the work.
-
-Decorated methods stay synchronous when every condition and the method body are synchronous. If any condition is async, or the body returns a promise, the decorated method returns a promise instead, so async-guarded methods should be declared with a `Promise` return type.
-
-## Async Transitions
-
-Conditions and transition bodies can both be synchronous or asynchronous.
-
-```ts
-import {
-  ConcurrentTransitionError,
-  StateMachine,
-  transition,
-} from "finite-state-machine-ts";
-
-const DeploymentState = {
-  Pending: "pending",
-  Running: "running",
-  Completed: "completed",
-} as const;
-
-type DeploymentState = (typeof DeploymentState)[keyof typeof DeploymentState];
-
-class Deployment extends StateMachine<DeploymentState> {
-  static initialState: DeploymentState = DeploymentState.Pending;
-
-  @transition<DeploymentState, Deployment, [], Promise<string>>({
-    source: DeploymentState.Pending,
-    target: DeploymentState.Running,
-    conditions: [
-      async () => {
-        await Promise.resolve();
-        return true;
-      },
-    ],
-  })
-  async start() {
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    return "started";
-  }
-}
-
-const deployment = new Deployment();
-const pending = deployment.start();
-
-console.log(deployment.state); // "pending"
-
-try {
-  deployment.start();
-} catch (error) {
-  console.error(error instanceof ConcurrentTransitionError); // true
-}
-
-await pending;
-console.log(deployment.state); // "running"
-```
-
-While an async condition or async body is pending, the machine stays in the source state and blocks other transitions on that same instance with `ConcurrentTransitionError`. Other machine instances are unaffected.
-
-## Why Use This Instead of a Heavier FSM Library?
-
-Use this library when you want a small runtime abstraction, not a full workflow engine. It keeps the API close to normal class methods and avoids the configuration overhead common in more feature-rich state machine libraries.
-
-## State Diagrams
-
-You can generate Mermaid state diagrams directly from the transitions declared on a state machine class.
-
-### Programmatic API
-
-```ts
-import { generateStateDiagram } from "finite-state-machine-ts";
-
-const diagram = generateStateDiagram(BackgroundJob, { initialState: "queued" });
-
-console.log(diagram);
-```
-
-Example output:
-
-```md
-stateDiagram-v2
-  state "queued" as state_0
-  state "running" as state_1
-  state "completed" as state_2
-  state "failed" as state_3
-  [*] --> state_0
-  state_0 --> state_1: start
-  state_1 --> state_2: process
-  state_1 --> state_3: process (error)
-  state_3 --> state_0: retry
-```
-
-### CLI
-
-After building the package, use the bundled command:
-
-```bash
-fsm-draw-state-diagram --class ./dist/path/to/your-machine.js:YourStateMachine --initial-state off
-```
-
-The `--class` argument matches the Python library's shape: `<module-path>:<export-name>`.
+- Transition definitions live on the methods that perform the work.
+- Works with synchronous and asynchronous guards and transition bodies.
+- Blocks overlapping async transitions per machine instance with `ConcurrentTransitionError`.
+- Generates Mermaid state diagrams from the decorated class, including CLI support.
 
 ## API
 

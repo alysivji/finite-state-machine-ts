@@ -1,3 +1,7 @@
+---
+title: Traffic Light
+---
+
 # Traffic Light
 
 This example models a fixed cycle where each state has exactly one valid next state.

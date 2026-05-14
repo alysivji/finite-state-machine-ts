@@ -1,3 +1,7 @@
+---
+title: Turnstile
+---
+
 # Turnstile
 
 This is the smallest example in the repo: one self-looping transition and one transition back to the starting state.

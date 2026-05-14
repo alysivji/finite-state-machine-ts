@@ -1,3 +1,7 @@
+---
+title: GitHub Pull Request
+---
+
 # GitHub Pull Request
 
 This example combines multi-source transitions with a guarded merge step.

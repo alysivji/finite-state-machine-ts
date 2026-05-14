@@ -1,3 +1,7 @@
+---
+title: Background Job
+---
+
 # Background Job
 
 This example shows how `onError` creates an explicit failure edge in the diagram.
