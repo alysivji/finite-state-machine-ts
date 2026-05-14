@@ -1,3 +1,7 @@
+---
+title: Light Switch
+---
+
 # Light Switch
 
 This example shows a guarded transition using a condition function.
