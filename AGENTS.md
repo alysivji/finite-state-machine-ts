@@ -37,7 +37,7 @@ Avoid introducing new public exports, changing CLI syntax, or altering runtime s
 
 ## Implementation facts to preserve
 
-- Transition metadata is collected by the decorator and stored on the class prototype chain.
+- Transition metadata is collected by the decorator and stored in standard decorator metadata (`Class[Symbol.metadata]`), which subclasses inherit. The library installs a `Symbol.metadata` fallback because Node does not ship it yet.
 - `generateStateDiagram(...)` derives Mermaid output from collected transition definitions, not from a separate machine config object.
 - Async conditions and async transition bodies keep the machine in the source state until completion.
 - Overlapping async transitions are blocked per machine instance with `ConcurrentTransitionError`.

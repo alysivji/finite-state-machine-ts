@@ -35,6 +35,14 @@ type TransitionMethod<TMachine, TArgs extends unknown[], TResult> = (
   ...args: TArgs
 ) => TResult;
 
+// Standard decorator metadata (`context.metadata`) lives on
+// `Class[Symbol.metadata]`. Node does not ship `Symbol.metadata` yet, and
+// TypeScript's emitted decorator code only creates metadata when the symbol
+// exists, so install the well-known fallback before any class is decorated.
+const symbolWithMetadata = Symbol as { metadata?: symbol };
+symbolWithMetadata.metadata ??= Symbol.for("Symbol.metadata");
+const SYMBOL_METADATA: symbol = symbolWithMetadata.metadata;
+
 const TRANSITION_DEFINITIONS = Symbol.for(
   "finite-state-machine-ts.transition-definitions",
 );
@@ -47,6 +55,17 @@ interface InFlightTransition<S extends string> {
   sourceState: S;
 }
 
+type TransitionDecorator<TMachine, TArgs extends unknown[], TResult> = <
+  TActualArgs extends TArgs = TArgs,
+  TActualResult extends TResult = TResult,
+>(
+  value: TransitionMethod<TMachine, TActualArgs, TActualResult>,
+  context: ClassMethodDecoratorContext<
+    TMachine,
+    TransitionMethod<TMachine, TActualArgs, TActualResult>
+  >,
+) => TransitionMethod<TMachine, TActualArgs, TActualResult>;
+
 export function transition<
   S extends string,
   TMachine extends StateMachine<S>,
@@ -54,15 +73,7 @@ export function transition<
   TResult = unknown,
 >(
   config: TransitionConfig<S, TMachine, SyncCondition<TMachine>>,
-): <TActualArgs extends TArgs = TArgs, TActualResult extends TResult = TResult>(
-  target: object,
-  propertyKey: string | symbol,
-  descriptor: TypedPropertyDescriptor<
-    TransitionMethod<TMachine, TActualArgs, TActualResult>
-  >,
-) => TypedPropertyDescriptor<
-  TransitionMethod<TMachine, TActualArgs, TActualResult>
->;
+): TransitionDecorator<TMachine, TArgs, TResult>;
 export function transition<
   S extends string,
   TMachine extends StateMachine<S>,
@@ -70,15 +81,7 @@ export function transition<
   TResult extends Promise<unknown> = Promise<unknown>,
 >(
   config: TransitionConfig<S, TMachine, Condition<TMachine>>,
-): <TActualArgs extends TArgs = TArgs, TActualResult extends TResult = TResult>(
-  target: object,
-  propertyKey: string | symbol,
-  descriptor: TypedPropertyDescriptor<
-    TransitionMethod<TMachine, TActualArgs, TActualResult>
-  >,
-) => TypedPropertyDescriptor<
-  TransitionMethod<TMachine, TActualArgs, TActualResult>
->;
+): TransitionDecorator<TMachine, TArgs, TResult>;
 export function transition<S extends string, TMachine extends StateMachine<S>>(
   config: TransitionConfig<S, TMachine, Condition<TMachine>>,
 ) {
@@ -91,29 +94,28 @@ export function transition<S extends string, TMachine extends StateMachine<S>>(
     TArgs extends unknown[] = unknown[],
     TResult = unknown,
   >(
-    target: object,
-    propertyKey: string | symbol,
-    descriptor: TypedPropertyDescriptor<
+    originalMethod: TransitionMethod<TMachine, TArgs, TResult>,
+    context: ClassMethodDecoratorContext<
+      TMachine,
       TransitionMethod<TMachine, TArgs, TResult>
     >,
-  ): TypedPropertyDescriptor<TransitionMethod<TMachine, TArgs, TResult>> {
-    const originalMethod = descriptor.value;
-
-    if (originalMethod === undefined) {
-      throw new TypeError("@transition can only be applied to methods.");
+  ): TransitionMethod<TMachine, TArgs, TResult> {
+    if (context.kind !== "method" || context.static || context.private) {
+      throw new TypeError(
+        "@transition can only be applied to public instance methods.",
+      );
     }
 
-    defineTransition(target, {
+    const propertyKey = context.name;
+
+    defineTransition(context.metadata, {
       method: String(propertyKey),
       source: sources,
       target: config.target,
       onError: errorState,
     });
 
-    descriptor.value = function wrappedTransition(
-      this: TMachine,
-      ...args: TArgs
-    ): TResult {
+    return function wrappedTransition(this: TMachine, ...args: TArgs): TResult {
       const methodName = String(propertyKey);
       const targetState = config.target;
 
@@ -191,8 +193,6 @@ export function transition<S extends string, TMachine extends StateMachine<S>>(
         );
       }
     };
-
-    return descriptor;
   };
 }
 
@@ -200,15 +200,20 @@ export function getTransitionDefinitions<S extends string>(
   machineClass: new (...args: never[]) => StateMachine<S>,
 ): TransitionDefinition<S>[] {
   const definitions: TransitionDefinition<S>[] = [];
-  let prototype = machineClass.prototype;
+  let metadata = (machineClass as unknown as Record<symbol, unknown>)[
+    SYMBOL_METADATA
+  ] as Record<symbol, unknown> | null | undefined;
 
-  while (prototype !== null && prototype !== Object.prototype) {
-    const ownDefinitions = Object.hasOwn(prototype, TRANSITION_DEFINITIONS)
-      ? ((prototype[TRANSITION_DEFINITIONS] as TransitionDefinition<S>[]) ?? [])
-      : [];
+  // A subclass's metadata object inherits from its parent's, so walk the chain
+  // and collect each level's own definitions, base class first.
+  while (metadata !== null && metadata !== undefined) {
+    if (Object.hasOwn(metadata, TRANSITION_DEFINITIONS)) {
+      definitions.unshift(
+        ...(metadata[TRANSITION_DEFINITIONS] as TransitionDefinition<S>[]),
+      );
+    }
 
-    definitions.unshift(...ownDefinitions);
-    prototype = Object.getPrototypeOf(prototype);
+    metadata = Object.getPrototypeOf(metadata);
   }
 
   return definitions;
@@ -416,10 +421,16 @@ function createTransitionExecutionError<S extends string>(
 }
 
 function defineTransition<S extends string>(
-  target: object,
+  metadata: DecoratorMetadataObject | undefined,
   definition: TransitionDefinition<S>,
 ): void {
-  const metadataTarget = target as Record<symbol, TransitionDefinition<S>[]>;
+  if (metadata === undefined) {
+    throw new TypeError(
+      "@transition requires decorator metadata support (TypeScript 5.2+).",
+    );
+  }
+
+  const metadataTarget = metadata as Record<symbol, TransitionDefinition<S>[]>;
   const existingDefinitions = Object.hasOwn(
     metadataTarget,
     TRANSITION_DEFINITIONS,

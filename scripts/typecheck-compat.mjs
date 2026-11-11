@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 
-const versions = ["5.0.4", "5.9.3", "6.0.2"];
+const versions = ["5.2.2", "5.9.3", "6.0.2"];
 const commands = [
   ["tsc", "--pretty", "false", "--noEmit", "-p", "tsconfig.json"],
   ["tsc", "--pretty", "false", "--noEmit", "-p", "test/tsconfig.json"],
