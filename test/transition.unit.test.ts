@@ -89,17 +89,35 @@ class QuotedStateMachine extends StateMachine<'say "hi"' | "done"> {
 }
 
 describe("transition unit semantics", () => {
-  it("rejects applying the transition decorator to a non-method descriptor", () => {
+  it("rejects applying the transition decorator to non-instance methods", () => {
     const decorate = transition<"idle" | "done", StateMachine<"idle" | "done">>(
       {
         source: "idle",
         target: "done",
       },
     );
+    const context = (overrides: object) =>
+      ({
+        kind: "method",
+        name: "notAllowed",
+        static: false,
+        private: false,
+        metadata: {},
+        ...overrides,
+      }) as unknown as ClassMethodDecoratorContext<
+        StateMachine<"idle" | "done">,
+        () => void
+      >;
 
-    expect(() =>
-      decorate({}, "notAMethod", {} as TypedPropertyDescriptor<() => void>),
-    ).toThrow("@transition can only be applied to methods.");
+    for (const overrides of [
+      { kind: "getter" },
+      { static: true },
+      { private: true },
+    ]) {
+      expect(() => decorate(() => {}, context(overrides))).toThrow(
+        "@transition can only be applied to public instance methods.",
+      );
+    }
   });
 
   it("updates state immediately and preserves plain sync return values", () => {
@@ -229,61 +247,46 @@ describe("transition unit semantics", () => {
 `);
   });
 
-  it("treats explicitly undefined transition metadata as empty", () => {
-    const transitionDefinitionsSymbol = Symbol.for(
-      "finite-state-machine-ts.transition-definitions",
-    );
+  it("collects transition metadata across subclasses, base class first", () => {
+    type InheritedState = "idle" | "running" | "done";
 
-    class MissingMetadataMachine extends StateMachine<"idle" | "done"> {
-      static initialState: "idle" | "done" = "idle";
-    }
+    class BaseMachine extends StateMachine<InheritedState> {
+      static initialState: InheritedState = "idle";
 
-    Object.defineProperty(
-      MissingMetadataMachine.prototype,
-      transitionDefinitionsSymbol,
-      {
-        configurable: true,
-        value: undefined,
-        writable: true,
-      },
-    );
-
-    expect(getTransitionDefinitions(MissingMetadataMachine)).toEqual([]);
-  });
-
-  it("appends transition metadata when an own metadata slot is present but undefined", () => {
-    const transitionDefinitionsSymbol = Symbol.for(
-      "finite-state-machine-ts.transition-definitions",
-    );
-
-    class UndefinedMetadataBase extends StateMachine<"idle" | "done"> {
-      static initialState: "idle" | "done" = "idle";
-    }
-
-    Object.defineProperty(
-      UndefinedMetadataBase.prototype,
-      transitionDefinitionsSymbol,
-      {
-        configurable: true,
-        value: undefined,
-        writable: true,
-      },
-    );
-
-    class UndefinedMetadataMachine extends UndefinedMetadataBase {
-      @transition<"idle" | "done", UndefinedMetadataMachine>({
+      @transition<InheritedState, BaseMachine>({
         source: "idle",
+        target: "running",
+      })
+      start() {}
+    }
+
+    class ChildMachine extends BaseMachine {
+      @transition<InheritedState, ChildMachine>({
+        source: "running",
         target: "done",
       })
       finish() {}
     }
 
-    expect(getTransitionDefinitions(UndefinedMetadataMachine)).toEqual([
-      {
-        method: "finish",
-        source: ["idle"],
-        target: "done",
-      },
+    expect(getTransitionDefinitions(BaseMachine)).toEqual([
+      { method: "start", source: ["idle"], target: "running" },
     ]);
+    expect(getTransitionDefinitions(ChildMachine)).toEqual([
+      { method: "start", source: ["idle"], target: "running" },
+      { method: "finish", source: ["running"], target: "done" },
+    ]);
+
+    const machine = new ChildMachine();
+    machine.start();
+    machine.finish();
+    expect(machine.state).toBe("done");
+  });
+
+  it("returns no definitions for a machine without transitions", () => {
+    class EmptyMachine extends StateMachine<"idle"> {
+      static initialState = "idle" as const;
+    }
+
+    expect(getTransitionDefinitions(EmptyMachine)).toEqual([]);
   });
 });

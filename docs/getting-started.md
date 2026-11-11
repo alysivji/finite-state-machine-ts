@@ -6,15 +6,7 @@
 npm install finite-state-machine-ts
 ```
 
-Enable decorators in your `tsconfig.json`:
-
-```json
-{
-  "compilerOptions": {
-    "experimentalDecorators": true
-  }
-}
-```
+This library uses standard ECMAScript decorators, which require TypeScript 5.2 or newer. Do not enable `experimentalDecorators` in your `tsconfig.json`; legacy decorators are not supported.
 
 ## First Machine
 

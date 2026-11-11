@@ -8,6 +8,7 @@ This file is a compact guide for AI coding assistants and other tools that need 
 
 ## Core rules
 
+- Requires TypeScript 5.2+ with standard decorators; do not enable `experimentalDecorators`.
 - Use string-valued states only.
 - Subclass `StateMachine<S extends string>`.
 - Set `static initialState` for new machine instances, or pass an explicit state to the constructor when restoring persisted state.
@@ -120,7 +121,7 @@ The `--class` argument format is `<module-path>:<export-name>`.
 
 ## Common mistakes to avoid
 
-- Do not forget `"experimentalDecorators": true` in `tsconfig.json`.
+- Do not enable `"experimentalDecorators"` in `tsconfig.json`; this library uses standard decorators (TypeScript 5.2+).
 - Do not use number, symbol, or object state values.
 - Do not assume async transitions update `state` before the promise resolves.
 - Do not mutate `state` manually during normal transitions; use decorated methods. Passing a constructor state for restore/init flows is fine.
