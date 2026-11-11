@@ -50,3 +50,18 @@ Avoid introducing new public exports, changing CLI syntax, or altering runtime s
 - Public API changes should be called out clearly for semver review.
 - Keep Markdown lightly formatted. Prefer short sections, plain bullets when needed, and unwrapped prose paragraphs over editor-oriented hard line breaks.
 - Keep the package small and straightforward. Avoid adding repo-local tooling or abstractions unless they solve a concrete recurring problem.
+
+## Releasing
+
+Releases are manual and run through GitHub Actions:
+
+1. Run the "Prepare Version Bump" workflow with `patch`, `minor`, or `major`. It only opens a PR that bumps `package.json`. While the package is 0.x, breaking changes go in a minor bump.
+2. Merge that PR.
+3. Run the "Release" workflow on `main`. It builds, typechecks, and tests, then tags `vX.Y.Z`, publishes to npm, and creates a GitHub release with generated notes.
+4. Edit the GitHub release notes to call out breaking changes and migration steps.
+
+npm publishing uses trusted publishing (GitHub OIDC with provenance), so there is no npm token secret. Don't add one. Long-lived publish tokens lose direct publish access in npm around January 2027. A new version can take a few minutes to show up on npmjs.com after the workflow finishes.
+
+## Install scripts
+
+npm 12 blocks dependency install scripts unless `allowScripts` in `package.json` lists them. The current entries (`esbuild`, `fsevents`) are denied because the build, tests, and docs build work without them. If a new dependency reports a blocked script, check whether anything breaks before approving it.
