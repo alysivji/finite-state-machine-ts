@@ -209,8 +209,7 @@ export function getTransitionDefinitions<S extends string>(
   while (metadata !== null && metadata !== undefined) {
     if (Object.hasOwn(metadata, TRANSITION_DEFINITIONS)) {
       definitions.unshift(
-        ...((metadata[TRANSITION_DEFINITIONS] as TransitionDefinition<S>[]) ??
-          []),
+        ...(metadata[TRANSITION_DEFINITIONS] as TransitionDefinition<S>[]),
       );
     }
 

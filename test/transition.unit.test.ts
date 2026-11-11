@@ -118,6 +118,10 @@ describe("transition unit semantics", () => {
         "@transition can only be applied to public instance methods.",
       );
     }
+
+    expect(() => decorate(() => {}, context({ metadata: undefined }))).toThrow(
+      "@transition requires decorator metadata support (TypeScript 5.2+).",
+    );
   });
 
   it("updates state immediately and preserves plain sync return values", () => {
