@@ -17,6 +17,7 @@ jobs:
           - "20"
           - "22"
           - "24"
+          - "26"
 
     steps:
       - name: Check out repository
@@ -32,33 +33,33 @@ jobs:
         run: npm ci
 
       - name: Check TypeScript compatibility
-        if: ${{ matrix.node == '24' }}
+        if: ${{ matrix.node == '26' }}
         run: npm run typecheck:compat
 
       - name: Build
         run: npm run build
 
       - name: Build docs
-        if: ${{ matrix.node == '24' }}
+        if: ${{ matrix.node == '26' }}
         run: npm run docs:build
 
       - name: Upload bundle analysis to Codecov
-        if: ${{ always() && !cancelled() && matrix.node == '24' }}
+        if: ${{ always() && !cancelled() && matrix.node == '26' }}
         env:
           BUNDLE_ANALYZER_UPLOAD_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         run: npm run codecov:bundle-analysis
 
       - name: Test
-        run: ${{ matrix.node == '24' && 'npm run test:coverage:ci' || 'npm run test:coverage' }}
+        run: ${{ matrix.node == '26' && 'npm run test:coverage:ci' || 'npm run test:coverage' }}
 
       - name: Upload coverage reports to Codecov
-        if: ${{ always() && !cancelled() && matrix.node == '24' }}
+        if: ${{ always() && !cancelled() && matrix.node == '26' }}
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload test results to Codecov
-        if: ${{ always() && !cancelled() && matrix.node == '24' }}
+        if: ${{ always() && !cancelled() && matrix.node == '26' }}
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
